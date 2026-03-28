@@ -1,6 +1,6 @@
 {
 	"name": "@savvy-web/github-action-template",
-	"version": "0.0.0",
+	"version": "0.0.1",
 	"private": true,
 	"description": "Boilerplate repo for setting up a GitHub Marketplace action with @savvy-web/github-action-builder and @savvy-web/github-action-effect.",
 	"homepage": "https://github.com/savvy-web/github-action-template#readme",
