@@ -1,20 +1,33 @@
-name: GitHub Action Template
-description: Boilerplate repo for setting up a GitHub Marketplace action with @savvy-web/github-action-builder and @savvy-web/github-action-effect
+name: Silk Router
+description: Phase detection and release plan computation for the Silk deployment pipeline
 branding:
-  icon: package
-  color: blue
+  icon: git-branch
+  color: purple
 inputs:
   app-id:
-    description: GitHub App ID for authentication
+    description: GitHub App ID for token generation
     required: true
   private-key:
     description: GitHub App private key (PEM format)
     required: true
+  target-branch:
+    description: The trunk branch
+    required: false
+    default: main
+  release-branch:
+    description: The release PR branch
+    required: false
+    default: changeset-release/main
 outputs:
-  demo-output:
-    description: Define your outputs here (e.g., 'demo-output' is just an example)
+  next-phase:
+    description: Which silk action runs next (silk-branch, silk-validate, silk-publish, silk-release, close-issues, skip)
+  reason:
+    description: Human-readable explanation for logs/summaries
+  release-plan:
+    description: Full release plan as JSON string
+  trigger:
+    description: Event context for downstream actions as JSON string
 runs:
   using: node24
-  pre: dist/pre.js
   main: dist/main.js
   post: dist/post.js

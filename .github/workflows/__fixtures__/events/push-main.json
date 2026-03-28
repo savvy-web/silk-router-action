@@ -1,0 +1,12 @@
+{
+    "ref": "refs/heads/main",
+    "after": "abc123def456",
+    "repository": {
+        "full_name": "savvy-web/silk-router-action",
+        "default_branch": "main"
+    },
+    "head_commit": {
+        "id": "abc123def456",
+        "message": "feat: add new feature"
+    }
+}

@@ -1,15 +1,15 @@
 {
-	"name": "@savvy-web/github-action-template",
+	"name": "silk-router-action",
 	"version": "0.0.0",
 	"private": true,
-	"description": "Boilerplate repo for setting up a GitHub Marketplace action with @savvy-web/github-action-builder and @savvy-web/github-action-effect.",
-	"homepage": "https://github.com/savvy-web/github-action-template#readme",
+	"description": "Composable GitHub Action for Silk release pipeline phase detection and release plan computation",
+	"homepage": "https://github.com/savvy-web/silk-router-action#readme",
 	"bugs": {
-		"url": "https://github.com/savvy-web/github-action-template/issues"
+		"url": "https://github.com/savvy-web/silk-router-action/issues"
 	},
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/savvy-web/github-action-template.git"
+		"url": "git+https://github.com/savvy-web/silk-router-action.git"
 	},
 	"license": "MIT",
 	"author": "Savvy Web Systems <spencer@savvyweb.systems> (https://savvyweb.systems)",
@@ -36,20 +36,23 @@
 		"validate": "github-action-builder validate"
 	},
 	"dependencies": {
-		"@effect/cluster": "catalog:silk",
+		"@changesets/assemble-release-plan": "^6.0.6",
+		"@changesets/config": "^3.1.1",
+		"@changesets/read": "^0.6.5",
+		"@changesets/types": "^6.1.0",
 		"@effect/platform": "catalog:silk",
 		"@effect/platform-node": "catalog:silk",
-		"@effect/rpc": "catalog:silk",
-		"@effect/sql": "catalog:silk",
 		"@savvy-web/github-action-effects": "^0.11.12",
-		"effect": "catalog:silk"
+		"effect": "catalog:silk",
+		"workspaces-effect": "^0.2.0"
 	},
 	"devDependencies": {
 		"@savvy-web/changesets": "^0.7.1",
 		"@savvy-web/commitlint": "^0.4.4",
 		"@savvy-web/github-action-builder": "^0.6.2",
 		"@savvy-web/lint-staged": "^0.6.6",
-		"@savvy-web/vitest": "^1.1.0"
+		"@savvy-web/vitest": "^1.1.0",
+		"execa": "^9.6.1"
 	},
 	"packageManager": "pnpm@10.33.0+sha512.10568bb4a6afb58c9eb3630da90cc9516417abebd3fabbe6739f0ae795728da1491e9db5a544c76ad8eb7570f5c4bb3d6c637b2cb41bfdcdb47fa823c8649319",
 	"devEngines": {

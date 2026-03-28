@@ -1,0 +1,28 @@
+{
+	"$schema": "https://raw.githubusercontent.com/spencerbeggs/design-docs/main/schema/design.config.schema.json",
+	"version": "1.0.0",
+	"project": {
+		"name": "silk-router-action",
+		"type": "package",
+		"description": "Phase detection and release plan computation for the Silk deployment pipeline"
+	},
+	"modules": {
+		"silk-router-action": {
+			"path": ".",
+			"description": "Silk router GitHub Action",
+			"categories": ["architecture", "patterns", "testing", "status"]
+		}
+	},
+	"quality": {
+		"context": {
+			"rootMaxLines": 500,
+			"childMaxLines": 300,
+			"requireDesignDocPointers": true
+		},
+		"designDocs": {
+			"requireFrontmatter": false,
+			"requireOverview": true,
+			"maxLines": 500
+		}
+	}
+}

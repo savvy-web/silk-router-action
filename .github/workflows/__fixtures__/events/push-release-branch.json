@@ -1,0 +1,12 @@
+{
+    "ref": "refs/heads/changeset-release/main",
+    "after": "def456abc789",
+    "repository": {
+        "full_name": "savvy-web/silk-router-action",
+        "default_branch": "main"
+    },
+    "head_commit": {
+        "id": "def456abc789",
+        "message": "chore: version packages"
+    }
+}

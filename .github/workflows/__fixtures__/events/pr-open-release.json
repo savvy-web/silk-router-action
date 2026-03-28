@@ -1,0 +1,19 @@
+{
+    "action": "opened",
+    "pull_request": {
+        "number": 43,
+        "merged": false,
+        "head": {
+            "ref": "changeset-release/main",
+            "sha": "pr-head-sha"
+        },
+        "base": {
+            "ref": "main"
+        },
+        "title": "Version Packages"
+    },
+    "repository": {
+        "full_name": "savvy-web/silk-router-action",
+        "default_branch": "main"
+    }
+}

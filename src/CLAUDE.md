@@ -1,68 +1,60 @@
 # src/CLAUDE.md
 
-Source code architecture and coding patterns for workflow-release-action.
+Source code architecture for silk-router-action.
 
-**See also:** [Root CLAUDE.md](../CLAUDE.md) | [**tests**/CLAUDE.md](../__tests__/CLAUDE.md)
+**Parent:** [Root CLAUDE.md](../CLAUDE.md)
 
-**For full architecture documentation:** `@../.claude/design/release-action/architecture.md` -- covers all entry points, phase detection, module dependency graph, and shared infrastructure (45 source files documented).
+**For full architecture details:**
+-> `@../.claude/design/silk-router-action/architecture.md`
 
-**For integration/publishing details:** `@../.claude/design/release-action/integration.md` -- covers registry infrastructure, SBOM generation, and publish summaries.
+Load when working on service wiring, layer composition, or entry points.
 
-## Architecture Overview
+## Architecture
 
-TypeScript action implementing a three-phase release workflow using changesets:
+Effect-TS action with composable service layers. Phase detection + release plan computation for the Silk deployment pipeline.
 
-- **Entry points** -- `main.ts` (phase routing, 1,043L), `pre.ts` (token setup, 79L), `post.ts` (cleanup, 50L)
-- **Utility modules** -- `utils/*.ts` for individual operations
-- **Type definitions** -- `types/*.ts` for shared interfaces
+**Entry points:**
+
+- `main.ts` -- Action.run with GitHubApp.withToken, runs program, sets outputs
+- `post.ts` -- No-op (token revoked by withToken's acquireUseRelease)
+- `program.ts` -- Core routing pipeline, fully testable via layer substitution
+
+**Services** (in `services/`):
+
+- `github-event-context.ts` -- Reads GITHUB_* env vars and event payload
+- `phase-resolver.ts` -- Pure decision logic: trigger + state -> phase + reason
+- `pull-request-detector.ts` -- Two-strategy release commit detection via API
+- `changeset-reader.ts` -- Reads .changeset/ via @changesets/read
+- `tag-strategy-resolver.ts` -- Single vs scoped from workspace structure
+- `target-resolver.ts` -- Resolves publishConfig to registry targets
+- `release-plan-assembler.ts` -- Orchestrates changeset + target + tag strategy
+- `summary-writer.ts` -- Generates job summary markdown
+
+**Schemas** (in `schemas/`):
+
+- `phase.ts` -- Schema.Literal for next-phase enum
+- `trigger.ts` -- Trigger context (event, branch, pr_number, is_merged, sha)
+- `registry.ts` -- Registry, RegistryTarget, NpmParams, JsrParams
+- `release-plan.ts` -- ReleasePlan, ReleaseEntry, BumpType, TagStrategy
+
+**Layers** (in `layers/`):
+
+- `app.ts` -- AppLayer (all services wired) and PostLayer (GitHubApp only)
 
 ## Coding Standards
 
-### Type Safety
+- Use `Schema.Class` for domain types (not interface/type)
+- Use `Context.Tag` + `Layer.effect`/`Layer.succeed` for services
+- Every service exports `*Test.layer()` for testing
+- `Config.redacted()` for secrets (not deprecated `Config.secret`)
+- `.js` extensions on all imports
+- Biome enforces import ordering and `interface` over `type`
+- No `@actions/core` -- use `@savvy-web/github-action-effects` services
+- No `vi.mock()` -- pure layer substitution for all tests
 
-- Explicit return types on all exported functions
-- Never use `any` -- use proper types or `unknown` with type guards
-- Prefer `type` over `interface` (Biome enforced)
-- Narrow error types: `(error as { status?: number }).status === 404`
+## Error Handling
 
-### Import Conventions
-
-- Use `.js` extensions: `import { fn } from "./utils/module.js"`
-- Use `node:` protocol: `import { readFile } from "node:fs/promises"`
-- Order: Node.js builtins > External packages > Internal modules > Type imports (Biome enforced)
-
-### GitHub API
-
-Get Octokit from `@actions/github`:
-
-```typescript
-const token = core.getInput("token", { required: true });
-const github = getOctokit(token);
-const { owner, repo } = context.repo;
-```
-
-Use check runs for CI feedback, `core.summary` for rich output.
-
-### Exec Patterns
-
-Use `@actions/exec` with listeners for stdout/stderr capture. See design doc for detailed patterns.
-
-### Error Handling
-
-- Graceful degradation: log warnings with `core.warning()`, return meaningful defaults
-- Fail fast for critical errors: `core.setFailed()` + rethrow
-- Type-narrow errors: `error instanceof Error ? error.message : String(error)`
-
-### Input Handling
-
-Read and validate action inputs early in structured `getInputs()` functions. Pass dependencies as parameters (not `core.getInput()` inside utility functions).
-
-## Code Organization
-
-- **Single responsibility** -- Each utility module has one focused purpose
-- **Dependency injection** -- Pass dependencies as parameters for testability
-- **Structured returns** -- Return objects with named fields, not primitives
-
-## TSDoc
-
-Use TSDoc comments for all exported functions with `@param`, `@returns`, and `@remarks` tags.
+- `Schema.TaggedError` for domain errors
+- `Effect.mapError` at service boundaries to convert error types
+- `Effect.catchAll` with safe defaults for non-critical failures
+- Retry only 5xx errors (not 4xx) via `while` filter in `Effect.retry`

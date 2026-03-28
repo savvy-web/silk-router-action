@@ -1,16 +1,24 @@
-name: Local Test
-permissions:
-  contents: read
-  actions: write
+name: Local Integration Test
 on:
-  workflow_dispatch: null
+  push:
 
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - name: Setup Runtime
-        id: runtime
+      - name: Run silk-router
+        id: silk-router
         uses: ./.github/actions/local
+        with:
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+
+      - name: Check outputs
+        env:
+          PHASE: ${{ steps.silk-router.outputs.next-phase }}
+          REASON: ${{ steps.silk-router.outputs.reason }}
+        run: |
+          echo "next-phase: $PHASE"
+          echo "reason: $REASON"

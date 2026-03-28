@@ -1,0 +1,155 @@
+name: Test Fixture
+description: Set up fixture, mock GitHub event context, run silk-router action, and verify outputs
+
+inputs:
+  fixture:
+    description: Fixture directory name under __fixtures__/pnpm/
+    required: true
+  title:
+    description: Test title for results
+    required: true
+  app-id:
+    description: GitHub App ID
+    required: true
+  private-key:
+    description: GitHub App private key
+    required: true
+  mock-event:
+    description: "Event name to simulate (push or pull_request). Leave empty to use real event."
+    required: false
+    default: ""
+  mock-ref:
+    description: "Git ref to simulate (e.g. refs/heads/main). Leave empty to use real ref."
+    required: false
+    default: ""
+  mock-sha:
+    description: "Commit SHA to simulate. Leave empty to use real SHA."
+    required: false
+    default: ""
+  mock-event-payload:
+    description: "Path to event payload JSON fixture (relative to repo root). Leave empty to use real payload."
+    required: false
+    default: ""
+  expected-phase:
+    description: Expected next-phase output
+    required: false
+    default: ""
+  expected-reason-contains:
+    description: Expected substring in reason output
+    required: false
+    default: ""
+
+outputs:
+  next-phase:
+    description: The next-phase output from the action
+    value: ${{ steps.run-action.outputs.next-phase }}
+  reason:
+    description: The reason output from the action
+    value: ${{ steps.run-action.outputs.reason }}
+  release-plan:
+    description: The release-plan output from the action
+    value: ${{ steps.run-action.outputs.release-plan }}
+  trigger:
+    description: The trigger output from the action
+    value: ${{ steps.run-action.outputs.trigger }}
+  test-passed:
+    description: Whether all validations passed
+    value: ${{ steps.verify.outputs.passed }}
+
+runs:
+  using: composite
+  steps:
+    - name: Setup fixture
+      shell: bash
+      run: |
+        FIXTURE_DIR="${GITHUB_WORKSPACE}/.github/workflows/__fixtures__/pnpm/${{ inputs.fixture }}"
+        if [ ! -d "$FIXTURE_DIR" ]; then
+          echo "::error::Fixture directory not found: $FIXTURE_DIR"
+          exit 1
+        fi
+        echo "::group::Setup fixture: ${{ inputs.fixture }}"
+        echo "Fixture path: $FIXTURE_DIR"
+        echo "Fixture contents:"
+        find "$FIXTURE_DIR" -type f | head -20
+        echo "::endgroup::"
+
+    - name: Run silk-router action
+      id: run-action
+      shell: bash
+      env:
+        GITHUB_ACTIONS: "true"
+        INPUT_APP-ID: ${{ inputs.app-id }}
+        INPUT_PRIVATE-KEY: ${{ inputs.private-key }}
+        INPUT_TARGET-BRANCH: main
+        INPUT_RELEASE-BRANCH: changeset-release/main
+      run: |
+        REPO_ROOT="${GITHUB_WORKSPACE}"
+        FIXTURE_DIR="${REPO_ROOT}/.github/workflows/__fixtures__/pnpm/${{ inputs.fixture }}"
+
+        # Override GITHUB_* env vars if mock values provided
+        if [ -n "${{ inputs.mock-event }}" ]; then
+          export GITHUB_EVENT_NAME="${{ inputs.mock-event }}"
+        fi
+        if [ -n "${{ inputs.mock-ref }}" ]; then
+          export GITHUB_REF="${{ inputs.mock-ref }}"
+        fi
+        if [ -n "${{ inputs.mock-sha }}" ]; then
+          export GITHUB_SHA="${{ inputs.mock-sha }}"
+        fi
+        if [ -n "${{ inputs.mock-event-payload }}" ]; then
+          export GITHUB_EVENT_PATH="${REPO_ROOT}/${{ inputs.mock-event-payload }}"
+        fi
+
+        # Point GITHUB_WORKSPACE at the fixture directory so the action
+        # reads package.json, .changeset/, etc. from the fixture
+        export GITHUB_WORKSPACE="$FIXTURE_DIR"
+
+        # Run the action from the repo root (where dist/ lives)
+        node "${REPO_ROOT}/.github/actions/local/dist/main.js"
+
+    - name: Run post step
+      if: always()
+      shell: bash
+      env:
+        GITHUB_ACTIONS: "true"
+      run: node .github/actions/local/dist/post.js
+
+    - name: Verify outputs
+      id: verify
+      shell: bash
+      env:
+        ACTUAL_PHASE: ${{ steps.run-action.outputs.next-phase }}
+        ACTUAL_REASON: ${{ steps.run-action.outputs.reason }}
+        EXPECTED_PHASE: ${{ inputs.expected-phase }}
+        EXPECTED_REASON_CONTAINS: ${{ inputs.expected-reason-contains }}
+      run: |
+        echo "::group::Verify outputs: ${{ inputs.title }}"
+        PASSED=true
+
+        echo "next-phase: $ACTUAL_PHASE"
+        echo "reason: $ACTUAL_REASON"
+
+        if [ -n "$EXPECTED_PHASE" ]; then
+          if [ "$ACTUAL_PHASE" != "$EXPECTED_PHASE" ]; then
+            echo "::error::Expected phase '$EXPECTED_PHASE' but got '$ACTUAL_PHASE'"
+            PASSED=false
+          else
+            echo "Phase check passed: $EXPECTED_PHASE"
+          fi
+        fi
+
+        if [ -n "$EXPECTED_REASON_CONTAINS" ]; then
+          if echo "$ACTUAL_REASON" | grep -q "$EXPECTED_REASON_CONTAINS"; then
+            echo "Reason check passed: contains '$EXPECTED_REASON_CONTAINS'"
+          else
+            echo "::error::Expected reason to contain '$EXPECTED_REASON_CONTAINS' but got '$ACTUAL_REASON'"
+            PASSED=false
+          fi
+        fi
+
+        echo "passed=$PASSED" >> "$GITHUB_OUTPUT"
+        echo "::endgroup::"
+
+        if [ "$PASSED" != "true" ]; then
+          exit 1
+        fi

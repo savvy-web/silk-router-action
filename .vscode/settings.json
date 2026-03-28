@@ -40,7 +40,7 @@
 		"**/.vitest": true,
 		"**/*.tsbuildinfo": true,
 		"**/dist": false,
-		"**/node_modules": true
+		"**/node_modules": false
 	},
 	"gitlens.statusBar.pullRequests.enabled": true,
 	"typescript.experimental.useTsgo": true,
