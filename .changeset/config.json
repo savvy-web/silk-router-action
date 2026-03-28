@@ -3,7 +3,7 @@
 	"changelog": [
 		"@savvy-web/changesets/changelog",
 		{
-			"repo": "savvy-web/github-action-template"
+			"repo": "savvy-web/silk-router-action"
 		}
 	],
 	"commit": false,
