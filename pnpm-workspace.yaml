@@ -2,6 +2,6 @@ packages:
   - .
 autoInstallPeers: true
 configDependencies:
-  "@savvy-web/pnpm-plugin-silk": 0.11.0+sha512-uvL2j/021Je7LsgFjTdO7kGkeE2uFUSWJFtIQJciESAIGXHlKxvFrVQ+PhQ4ScGGeTXfUyoTqHFKTM2UrgpRZA==
+  "@savvy-web/pnpm-plugin-silk": 0.13.0+sha512-R1+Q7p1yjmjQIZzSNpKm0r2oY35JtFSGGOw25u0oq16By6728YeMr6Oa7R2U1CjUVuvXQSKkshzvX8d8+RCZ/g==
 overrides:
   workspace-tools: 0.41.0
