@@ -79,9 +79,9 @@ jobs:
         uses: savvy-web/workflow-runtime-action@main
 
       - name: Run release action
-        uses: savvy-web/workflow-release-action@main
+        uses: savvy-web/silk-release-action@v1
         with:
-          app-id: ${{ secrets.APP_ID }}
+          app-client-id: ${{ vars.APP_CLIENT_ID }}
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
           dry-run: ${{ inputs.dry_run || 'false' }}
