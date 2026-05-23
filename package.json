@@ -5,7 +5,7 @@
 	"description": "A private repository for GitHub-related tools and utilities.",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/savvy-web/workflow-release-action.git"
+		"url": "https://github.com/savvy-web/silk-release-action.git"
 	},
 	"type": "module",
 	"scripts": {

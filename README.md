@@ -25,7 +25,7 @@ A lightweight GitHub Action for pre-flight workflow control checks. Split monoli
 
 ## The Problem
 
-The parent project `savvy-web/workflow-release-action` provides comprehensive release workflow automation handling branch management, validation, and publishing. However, a single monolithic workflow triggering on all pushes runs unnecessary jobs:
+The parent project `savvy-web/silk-release-action` provides comprehensive release workflow automation handling branch management, validation, and publishing. However, a single monolithic workflow triggering on all pushes runs unnecessary jobs:
 
 * Push to `main` with changesets should create/update release branch
 * Push to `main` from merged release PR should publish packages
@@ -156,10 +156,10 @@ jobs:
         uses: savvy-web/workflow-runtime-action@v1
 
       - name: Run release
-        uses: savvy-web/workflow-release-action@v1
+        uses: savvy-web/silk-release-action@v1
         with:
           phase: ${{ needs.control.outputs.phase }}
-          app-id: ${{ secrets.APP_ID }}
+          app-client-id: ${{ vars.APP_CLIENT_ID }}
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
 ```
@@ -261,10 +261,10 @@ jobs:
         uses: savvy-web/workflow-runtime-action@v1
 
       - name: Run release
-        uses: savvy-web/workflow-release-action@v1
+        uses: savvy-web/silk-release-action@v1
         with:
           phase: ${{ needs.control.outputs.phase }}
-          app-id: ${{ secrets.APP_ID }}
+          app-client-id: ${{ vars.APP_CLIENT_ID }}
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
         env:
@@ -292,7 +292,7 @@ This action is part of a suite of **three companion actions** for release workfl
 | --- | --- | --- |
 | `workflow-control-action` | Pre-flight checks | Determine **IF** a workflow should run |
 | `workflow-runtime-action` | Runtime setup & caching | Set up Node.js, pnpm, and cache deps |
-| `workflow-release-action` | Full release automation | Perform the actual release operations |
+| `silk-release-action` | Full release automation | Perform the actual release operations |
 
 ### Recommended Pattern
 
@@ -349,10 +349,10 @@ jobs:
         uses: savvy-web/workflow-runtime-action@v1
 
       - name: Run release
-        uses: savvy-web/workflow-release-action@v1
+        uses: savvy-web/silk-release-action@v1
         with:
           phase: ${{ needs.control.outputs.phase }}
-          app-id: ${{ secrets.APP_ID }}
+          app-client-id: ${{ vars.APP_CLIENT_ID }}
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
 ```

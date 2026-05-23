@@ -252,7 +252,7 @@ Each workflow runs this action first, then conditionally proceeds:
 ### Type System
 
 The `src/types/` directory contains types that are forward-looking for the
-parent `workflow-release-action`:
+parent `silk-release-action`:
 
 - **`shared-types.ts`** -- `ValidationResult` and
   `PackageValidationResult` for validation phases
@@ -267,7 +267,7 @@ the contract for downstream release workflow steps.
 
 ### Why a Separate Action?
 
-The parent `workflow-release-action` runs a comprehensive release workflow.
+The parent `silk-release-action` runs a comprehensive release workflow.
 A single workflow triggering on all pushes to main runs unnecessary jobs
 (validation when only branch management is needed, publishing when no
 release PR was merged). By extracting the detection logic into a lightweight

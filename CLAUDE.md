@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is **workflow-control-action** - a lightweight GitHub Action for pre-flight workflow control checks. It enables splitting monolithic release workflows into targeted workflows that only run when needed.
 
-**Background**: The parent project `savvy-web/workflow-release-action` has a comprehensive release workflow handling branch management, validation, and publishing. The problem: a single workflow triggering on all pushes runs unnecessary jobs. This action provides lightweight pre-flight checks so workflows can be split into targeted pieces.
+**Background**: The parent project `savvy-web/silk-release-action` has a comprehensive release workflow handling branch management, validation, and publishing. The problem: a single workflow triggering on all pushes runs unnecessary jobs. This action provides lightweight pre-flight checks so workflows can be split into targeted pieces.
 
 ## Proposed Action Interface
 
