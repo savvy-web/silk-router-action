@@ -2,9 +2,9 @@
 	"$schema": "../../.claude/skills/design-config/json-schemas/current.json",
 	"version": "1.0.0",
 	"project": {
-		"name": "savvy-web/workflow-control-action",
+		"name": "savvy-web/silk-router-action",
 		"type": "application",
-		"repository": "https://github.com/savvy-web/workflow-control-action",
+		"repository": "https://github.com/savvy-web/silk-router-action",
 		"maintainer": "C. Spencer Beggs"
 	},
 	"paths": {
@@ -15,9 +15,9 @@
 		"localContext": "CLAUDE.local.md"
 	},
 	"modules": {
-		"workflow-control-action": {
+		"silk-router-action": {
 			"path": ".",
-			"designDocsPath": ".claude/design/workflow-control-action",
+			"designDocsPath": ".claude/design/silk-router-action",
 			"categories": ["architecture", "integration", "testing"],
 			"maintainer": "C. Spencer Beggs",
 			"userDocs": {
