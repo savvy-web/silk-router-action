@@ -1,5 +1,28 @@
 # @savvy-web/workflow-control-action
 
+## 1.0.0
+
+### Breaking Changes
+
+* [`1afebd7`](https://github.com/savvy-web/silk-router-action/commit/1afebd7df93a3810e1bb7ec051bd53fe5bb0bb8d) Repository renamed from `savvy-web/workflow-control-action` to `savvy-web/silk-router-action`. The GitHub redirect keeps old `uses:` references resolving, but consumers should update to `savvy-web/silk-router-action@v1` once the v1 alias tag is in place. Action inputs and outputs are byte-identical with `0.0.4` — no workflow-level changes are required beyond updating the `uses:` reference.
+
+### Refactoring
+
+* [`1afebd7`](https://github.com/savvy-web/silk-router-action/commit/1afebd7df93a3810e1bb7ec051bd53fe5bb0bb8d) Standardized on `@savvy-web/github-action-effects` v2. Every direct `@actions/*` and `@octokit/*` dependency is dropped in favor of the library's services.
+* Restructured `src/` to the canonical `services/` + `errors/` + `schemas/` + `layers/` layout with a single `main.ts` entry (no `pre.ts` / `post.ts`).
+* Emoji-prefixed `logger.*` calls replaced by `Step.groupStep` + plain `Effect.log*` lines.
+* `ts-markdown` summary builder replaced by `GithubMarkdown.*` helpers from the library.
+* Inputs read via `Config.string`; outputs written via `ActionOutputs.set`.
+* `GitHubClientLive.fromEnv()` reads `GITHUB_TOKEN` (with `INPUT_TOKEN` bridged in by `Action.run`).
+
+### Tests
+
+* [`1afebd7`](https://github.com/savvy-web/silk-router-action/commit/1afebd7df93a3810e1bb7ec051bd53fe5bb0bb8d) Migrated from `vi.mock("@actions/*")` patterns to library `<Service>Test.layer(state)` from `@savvy-web/github-action-effects/testing`. Tests are co-located at `src/**/*.test.ts`; the `__test__/` directory is gone.
+
+### Build System
+
+* [`1afebd7`](https://github.com/savvy-web/silk-router-action/commit/1afebd7df93a3810e1bb7ec051bd53fe5bb0bb8d) Switched from `@vercel/ncc` to `@savvy-web/github-action-builder` (rsbuild-based) configured via `action.config.ts`.
+
 ## 0.0.4
 
 ### Dependencies
