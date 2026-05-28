@@ -1,5 +1,11 @@
 # @savvy-web/workflow-control-action
 
+## 1.0.1
+
+### Bug Fixes
+
+* [`907b088`](https://github.com/savvy-web/silk-router-action/commit/907b08818c3a23111b93d259dbcf4392ec28caee) Bump `@savvy-web/github-action-effects` to `^2.0.1` and rebuild `dist/main.js` against it. The library's `WebhookPayload` schema now accepts `null` in `IssueRef.body`, `IssueRef.html_url`, `Repository.full_name`, and `Repository.html_url`, matching what GitHub actually sends when a PR has no description. Without this, every `pull_request` event whose body or url was `null` aborted the action with `[ActionEnvironmentError] Event payload did not match the expected shape: WebhookPayload — Expected string, actual null`.
+
 ## 1.0.0
 
 ### Breaking Changes
