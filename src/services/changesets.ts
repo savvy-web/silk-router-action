@@ -109,16 +109,3 @@ export const getHighestBumpType = (packageBumps: ReadonlyMap<string, BumpType>):
 	}
 	return highest;
 };
-
-export const hasChangesets = (changesetPath = ".changeset"): boolean => {
-	const absolutePath = path.isAbsolute(changesetPath) ? changesetPath : path.join(process.cwd(), changesetPath);
-	if (!fs.existsSync(absolutePath)) return false;
-	return fs.readdirSync(absolutePath).some((file) => file.endsWith(".md") && file.toLowerCase() !== "readme.md");
-};
-
-export const countChangesets = (changesetPath = ".changeset"): number => {
-	const absolutePath = path.isAbsolute(changesetPath) ? changesetPath : path.join(process.cwd(), changesetPath);
-	if (!fs.existsSync(absolutePath)) return 0;
-	return fs.readdirSync(absolutePath).filter((file) => file.endsWith(".md") && file.toLowerCase() !== "readme.md")
-		.length;
-};

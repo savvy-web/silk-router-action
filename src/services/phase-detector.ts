@@ -1,6 +1,5 @@
 import { ActionEnvironment, GitHubClient } from "@savvy-web/github-action-effects";
 import { Context, Effect, Layer } from "effect";
-import type { PhaseDetectionError } from "../errors/errors.js";
 import type { PhaseDetectionResult, WorkflowPhase } from "../schemas/domain.js";
 
 interface PullRequestPayload {
@@ -46,7 +45,7 @@ export class PhaseDetector extends Context.Tag("silk-router-action/PhaseDetector
 		readonly detect: (options: {
 			readonly releaseBranch: string;
 			readonly targetBranch: string;
-		}) => Effect.Effect<PhaseDetectionResult, PhaseDetectionError>;
+		}) => Effect.Effect<PhaseDetectionResult, never>;
 	}
 >() {}
 

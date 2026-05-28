@@ -2,14 +2,7 @@ import * as fs from "node:fs";
 import { Effect } from "effect";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { BumpType } from "./changesets.js";
-import {
-	compareBumpTypes,
-	countChangesets,
-	getHighestBumpType,
-	hasChangesets,
-	parseChangesetFile,
-	parseChangesets,
-} from "./changesets.js";
+import { compareBumpTypes, getHighestBumpType, parseChangesetFile, parseChangesets } from "./changesets.js";
 
 vi.mock("node:fs");
 
@@ -362,67 +355,6 @@ Valid`)
 			expect(result.changesetCount).toBe(2); // Both files counted
 			expect(result.changesets).toHaveLength(1); // Only valid parsed
 			expect(result.affectedPackages).toEqual(["pkg"]);
-		});
-	});
-
-	describe("hasChangesets", () => {
-		it("should return false when directory does not exist", () => {
-			vi.mocked(fs.existsSync).mockReturnValue(false);
-
-			expect(hasChangesets()).toBe(false);
-		});
-
-		it("should return false when no .md files", () => {
-			vi.mocked(fs.existsSync).mockReturnValue(true);
-			vi.mocked(fs.readdirSync).mockReturnValue(["config.json"] as unknown as ReturnType<typeof fs.readdirSync>);
-
-			expect(hasChangesets()).toBe(false);
-		});
-
-		it("should return true when .md files exist (excluding README)", () => {
-			vi.mocked(fs.existsSync).mockReturnValue(true);
-			vi.mocked(fs.readdirSync).mockReturnValue(["README.md", "abc.md"] as unknown as ReturnType<
-				typeof fs.readdirSync
-			>);
-
-			expect(hasChangesets()).toBe(true);
-		});
-
-		it("should use custom path", () => {
-			vi.mocked(fs.existsSync).mockReturnValue(true);
-			vi.mocked(fs.readdirSync).mockReturnValue(["change.md"] as unknown as ReturnType<typeof fs.readdirSync>);
-
-			expect(hasChangesets("custom/path")).toBe(true);
-			expect(fs.existsSync).toHaveBeenCalledWith(expect.stringContaining("custom/path"));
-		});
-	});
-
-	describe("countChangesets", () => {
-		it("should return 0 when directory does not exist", () => {
-			vi.mocked(fs.existsSync).mockReturnValue(false);
-
-			expect(countChangesets()).toBe(0);
-		});
-
-		it("should return count excluding README.md", () => {
-			vi.mocked(fs.existsSync).mockReturnValue(true);
-			vi.mocked(fs.readdirSync).mockReturnValue([
-				"README.md",
-				"abc.md",
-				"def.md",
-				"config.json",
-			] as unknown as ReturnType<typeof fs.readdirSync>);
-
-			expect(countChangesets()).toBe(2);
-		});
-
-		it("should use custom path", () => {
-			vi.mocked(fs.existsSync).mockReturnValue(true);
-			vi.mocked(fs.readdirSync).mockReturnValue(["a.md", "b.md", "c.md"] as unknown as ReturnType<
-				typeof fs.readdirSync
-			>);
-
-			expect(countChangesets("custom")).toBe(3);
 		});
 	});
 });
