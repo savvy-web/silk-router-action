@@ -32,7 +32,7 @@
 	"dependencies": {
 		"@effect/platform": "catalog:silk",
 		"@effect/platform-node": "catalog:silk",
-		"@savvy-web/github-action-effects": "^2.0.0",
+		"@savvy-web/github-action-effects": "^2.0.1",
 		"effect": "catalog:silk"
 	},
 	"devDependencies": {
