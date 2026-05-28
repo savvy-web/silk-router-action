@@ -1,43 +1,31 @@
 import * as fs from "node:fs";
+import { Effect } from "effect";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import type { BumpType } from "./changesets.js";
+import { compareBumpTypes, getHighestBumpType, parseChangesetFile, parseChangesets } from "./changesets.js";
 
-import type { BumpType } from "../src/utils/parse-changesets.js";
-import {
-	compareBumpTypes,
-	countChangesets,
-	getHighestBumpType,
-	hasChangesets,
-	parseChangesetFile,
-	parseChangesets,
-} from "../src/utils/parse-changesets.js";
-
-// Mock node:fs
 vi.mock("node:fs");
 
-describe("parse-changesets", () => {
+describe("services/changesets", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 	});
-
 	afterEach(() => {
 		vi.restoreAllMocks();
 	});
 
-	describe("parseChangesetFile", () => {
-		it("should parse a valid changeset file with single package", () => {
-			const content = `---
-"my-package": minor
----
-
-Added a new feature`;
-
-			const result = parseChangesetFile(content, "abc123");
-
-			expect(result).toEqual({
-				id: "abc123",
-				summary: "Added a new feature",
+	describe("parseChangesetFile (pure)", () => {
+		it("parses a valid changeset with one package", () => {
+			const content = `---\n"my-package": minor\n---\n\nAdded a feature`;
+			expect(parseChangesetFile(content, "abc")).toEqual({
+				id: "abc",
+				summary: "Added a feature",
 				releases: [{ name: "my-package", type: "minor" }],
 			});
+		});
+
+		it("returns null when frontmatter is missing", () => {
+			expect(parseChangesetFile("no frontmatter here", "x")).toBeNull();
 		});
 
 		it("should parse a changeset with multiple packages", () => {
@@ -92,14 +80,6 @@ Summary`;
 				summary: "Summary",
 				releases: [{ name: "my-package", type: "minor" }],
 			});
-		});
-
-		it("should return null for invalid format (no frontmatter)", () => {
-			const content = `Just some text without frontmatter`;
-
-			const result = parseChangesetFile(content, "invalid");
-
-			expect(result).toBeNull();
 		});
 
 		it("should return null for malformed frontmatter", () => {
@@ -164,7 +144,13 @@ Summary`;
 		});
 	});
 
-	describe("compareBumpTypes", () => {
+	describe("compareBumpTypes / getHighestBumpType", () => {
+		it("compares bump types by precedence", () => {
+			expect(compareBumpTypes("major", "patch")).toBeGreaterThan(0);
+			expect(compareBumpTypes("patch", "minor")).toBeLessThan(0);
+			expect(compareBumpTypes("minor", "minor")).toBe(0);
+		});
+
 		it("should return positive when first is greater", () => {
 			expect(compareBumpTypes("major", "minor")).toBeGreaterThan(0);
 			expect(compareBumpTypes("major", "patch")).toBeGreaterThan(0);
@@ -182,10 +168,17 @@ Summary`;
 			expect(compareBumpTypes("minor", "minor")).toBe(0);
 			expect(compareBumpTypes("patch", "patch")).toBe(0);
 		});
-	});
 
-	describe("getHighestBumpType", () => {
-		it("should return null for empty map", () => {
+		it("picks the highest bump from a map", () => {
+			const map = new Map([
+				["a", "patch" as const],
+				["b", "major" as const],
+				["c", "minor" as const],
+			]);
+			expect(getHighestBumpType(map)).toBe("major");
+		});
+
+		it("returns null for an empty map", () => {
 			expect(getHighestBumpType(new Map())).toBeNull();
 		});
 
@@ -220,40 +213,60 @@ Summary`;
 		});
 	});
 
-	describe("parseChangesets", () => {
-		it("should return empty result when directory does not exist", () => {
+	describe("parseChangesets (Effect)", () => {
+		it("returns an empty result when .changeset directory does not exist", async () => {
 			vi.mocked(fs.existsSync).mockReturnValue(false);
-
-			const result = parseChangesets();
-
-			expect(result.hasChangesets).toBe(false);
-			expect(result.changesetCount).toBe(0);
-			expect(result.changesets).toEqual([]);
+			const result = await Effect.runPromise(parseChangesets());
+			expect(result).toEqual({
+				hasChangesets: false,
+				changesetCount: 0,
+				changesets: [],
+				releaseType: null,
+				affectedPackages: [],
+				packageBumps: new Map(),
+			});
 		});
 
-		it("should return empty result when no .md files", () => {
+		it("aggregates package bumps and picks the highest release type", async () => {
+			vi.mocked(fs.existsSync).mockReturnValue(true);
+			vi.mocked(fs.readdirSync).mockReturnValue(["a.md", "b.md", "README.md"] as never);
+			vi.mocked(fs.readFileSync).mockImplementation((p) => {
+				const pathStr = String(p);
+				if (pathStr.endsWith("a.md")) return `---\n"pkg-a": patch\n---\n\nfix`;
+				if (pathStr.endsWith("b.md")) return `---\n"pkg-a": major\n"pkg-b": minor\n---\n\nbreak`;
+				return "";
+			});
+			const result = await Effect.runPromise(parseChangesets());
+			expect(result.changesetCount).toBe(2);
+			expect(result.releaseType).toBe("major");
+			expect(result.affectedPackages).toEqual(["pkg-a", "pkg-b"]);
+			expect(result.packageBumps.get("pkg-a")).toBe("major");
+			expect(result.packageBumps.get("pkg-b")).toBe("minor");
+		});
+
+		it("should return empty result when no .md files", async () => {
 			vi.mocked(fs.existsSync).mockReturnValue(true);
 			vi.mocked(fs.readdirSync).mockReturnValue(["config.json"] as unknown as ReturnType<typeof fs.readdirSync>);
 
-			const result = parseChangesets();
+			const result = await Effect.runPromise(parseChangesets());
 
 			expect(result.hasChangesets).toBe(false);
 			expect(result.changesetCount).toBe(0);
 		});
 
-		it("should exclude README.md from changeset count", () => {
+		it("should exclude README.md from changeset count", async () => {
 			vi.mocked(fs.existsSync).mockReturnValue(true);
 			vi.mocked(fs.readdirSync).mockReturnValue(["README.md", "readme.md"] as unknown as ReturnType<
 				typeof fs.readdirSync
 			>);
 
-			const result = parseChangesets();
+			const result = await Effect.runPromise(parseChangesets());
 
 			expect(result.hasChangesets).toBe(false);
 			expect(result.changesetCount).toBe(0);
 		});
 
-		it("should parse all changeset files", () => {
+		it("should parse all changeset files", async () => {
 			vi.mocked(fs.existsSync).mockReturnValue(true);
 			vi.mocked(fs.readdirSync).mockReturnValue(["abc.md", "def.md"] as unknown as ReturnType<typeof fs.readdirSync>);
 			vi.mocked(fs.readFileSync).mockImplementation((filePath) => {
@@ -271,7 +284,7 @@ Major change`;
 Minor change`;
 			});
 
-			const result = parseChangesets();
+			const result = await Effect.runPromise(parseChangesets());
 
 			expect(result.hasChangesets).toBe(true);
 			expect(result.changesetCount).toBe(2);
@@ -280,7 +293,7 @@ Minor change`;
 			expect(result.affectedPackages).toEqual(["pkg-a", "pkg-b"]);
 		});
 
-		it("should calculate highest bump per package across multiple changesets", () => {
+		it("should calculate highest bump per package across multiple changesets", async () => {
 			vi.mocked(fs.existsSync).mockReturnValue(true);
 			vi.mocked(fs.readdirSync).mockReturnValue(["first.md", "second.md"] as unknown as ReturnType<
 				typeof fs.readdirSync
@@ -300,37 +313,35 @@ Patch in first`;
 Minor in second`;
 			});
 
-			const result = parseChangesets();
+			const result = await Effect.runPromise(parseChangesets());
 
 			expect(result.packageBumps.get("shared-pkg")).toBe("minor");
 		});
 
-		it("should use custom changeset path", () => {
+		it("should use custom changeset path", async () => {
 			vi.mocked(fs.existsSync).mockReturnValue(true);
 			vi.mocked(fs.readdirSync).mockReturnValue([] as unknown as ReturnType<typeof fs.readdirSync>);
 
-			parseChangesets({ changesetPath: "custom/.changesets" });
+			await Effect.runPromise(parseChangesets({ changesetPath: "custom/.changesets" }));
 
 			expect(fs.existsSync).toHaveBeenCalledWith(expect.stringContaining("custom/.changesets"));
 		});
 
-		it("should handle absolute paths", () => {
+		it("should handle absolute paths", async () => {
 			vi.mocked(fs.existsSync).mockReturnValue(true);
 			vi.mocked(fs.readdirSync).mockReturnValue([] as unknown as ReturnType<typeof fs.readdirSync>);
 
-			// Use an actual absolute path - path.isAbsolute will return true for paths starting with /
-			parseChangesets({ changesetPath: "/absolute/path/.changeset" });
+			await Effect.runPromise(parseChangesets({ changesetPath: "/absolute/path/.changeset" }));
 
 			expect(fs.existsSync).toHaveBeenCalledWith("/absolute/path/.changeset");
 		});
 
-		it("should skip invalid changeset files", () => {
+		it("should skip invalid changeset files", async () => {
 			vi.mocked(fs.existsSync).mockReturnValue(true);
 			vi.mocked(fs.readdirSync).mockReturnValue(["valid.md", "invalid.md"] as unknown as ReturnType<
 				typeof fs.readdirSync
 			>);
 
-			// Use mockReturnValueOnce for predictable ordering
 			vi.mocked(fs.readFileSync)
 				.mockReturnValueOnce(`---
 "pkg": patch
@@ -339,72 +350,11 @@ Minor in second`;
 Valid`)
 				.mockReturnValueOnce("No frontmatter here");
 
-			const result = parseChangesets();
+			const result = await Effect.runPromise(parseChangesets());
 
 			expect(result.changesetCount).toBe(2); // Both files counted
 			expect(result.changesets).toHaveLength(1); // Only valid parsed
 			expect(result.affectedPackages).toEqual(["pkg"]);
-		});
-	});
-
-	describe("hasChangesets", () => {
-		it("should return false when directory does not exist", () => {
-			vi.mocked(fs.existsSync).mockReturnValue(false);
-
-			expect(hasChangesets()).toBe(false);
-		});
-
-		it("should return false when no .md files", () => {
-			vi.mocked(fs.existsSync).mockReturnValue(true);
-			vi.mocked(fs.readdirSync).mockReturnValue(["config.json"] as unknown as ReturnType<typeof fs.readdirSync>);
-
-			expect(hasChangesets()).toBe(false);
-		});
-
-		it("should return true when .md files exist (excluding README)", () => {
-			vi.mocked(fs.existsSync).mockReturnValue(true);
-			vi.mocked(fs.readdirSync).mockReturnValue(["README.md", "abc.md"] as unknown as ReturnType<
-				typeof fs.readdirSync
-			>);
-
-			expect(hasChangesets()).toBe(true);
-		});
-
-		it("should use custom path", () => {
-			vi.mocked(fs.existsSync).mockReturnValue(true);
-			vi.mocked(fs.readdirSync).mockReturnValue(["change.md"] as unknown as ReturnType<typeof fs.readdirSync>);
-
-			expect(hasChangesets("custom/path")).toBe(true);
-			expect(fs.existsSync).toHaveBeenCalledWith(expect.stringContaining("custom/path"));
-		});
-	});
-
-	describe("countChangesets", () => {
-		it("should return 0 when directory does not exist", () => {
-			vi.mocked(fs.existsSync).mockReturnValue(false);
-
-			expect(countChangesets()).toBe(0);
-		});
-
-		it("should return count excluding README.md", () => {
-			vi.mocked(fs.existsSync).mockReturnValue(true);
-			vi.mocked(fs.readdirSync).mockReturnValue([
-				"README.md",
-				"abc.md",
-				"def.md",
-				"config.json",
-			] as unknown as ReturnType<typeof fs.readdirSync>);
-
-			expect(countChangesets()).toBe(2);
-		});
-
-		it("should use custom path", () => {
-			vi.mocked(fs.existsSync).mockReturnValue(true);
-			vi.mocked(fs.readdirSync).mockReturnValue(["a.md", "b.md", "c.md"] as unknown as ReturnType<
-				typeof fs.readdirSync
-			>);
-
-			expect(countChangesets("custom")).toBe(3);
 		});
 	});
 });

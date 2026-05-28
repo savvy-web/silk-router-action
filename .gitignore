@@ -4,8 +4,10 @@
 
 # Generated TypeScript declaration files for config files
 *.config.d.ts
+# NOTE: dist/ is NOT ignored - compiled GitHub Actions must be committed
+# The dist/ folder contains the compiled action code that GitHub Actions will execute
+# .github/actions/local/ is generated during build and also tracked for fixture testing
 **/build
-**/dist
 **/.rslib
 **/.artifacts
 **/.turbo
@@ -32,5 +34,7 @@ pnpm-release.json
 # Claude AI files
 .claude/settings.local.json
 .claude/plans/
+docs/superpowers/
 .claude/plugins-debug.log
 .playwright-mcp
+.mcp.json

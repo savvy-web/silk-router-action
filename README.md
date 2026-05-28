@@ -1,4 +1,4 @@
-# workflow-control-action
+# silk-router-action
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Node Version](https://img.shields.io/badge/node-24.x-brightgreen.svg)](https://nodejs.org)
@@ -34,7 +34,7 @@ The parent project `savvy-web/silk-release-action` provides comprehensive releas
 
 ## The Solution
 
-**workflow-control-action** provides fast pre-flight checks (less than 5 seconds) to detect which workflow phase should run. This enables splitting a monolithic workflow into multiple targeted workflows:
+**silk-router-action** provides fast pre-flight checks (less than 5 seconds) to detect which workflow phase should run. This enables splitting a monolithic workflow into multiple targeted workflows:
 
 * **Phase 1 (branch-management)**: Runs only when changesets are pushed to main
 * **Phase 2 (validation)**: Runs only on the release branch
@@ -46,7 +46,7 @@ The parent project `savvy-web/silk-release-action` provides comprehensive releas
 Add this action as a step in your workflow:
 
 ```yaml
-- uses: savvy-web/workflow-control-action@v1
+- uses: savvy-web/silk-router-action@v1
   id: control
   with:
     token: ${{ github.token }}
@@ -133,7 +133,7 @@ jobs:
 
       - name: Detect workflow phase
         id: control
-        uses: savvy-web/workflow-control-action@v1
+        uses: savvy-web/silk-router-action@v1
 
   branch-management:
     name: Update Release Branch
@@ -153,7 +153,7 @@ jobs:
 
       - name: Setup runtime
         id: runtime
-        uses: savvy-web/workflow-runtime-action@v1
+        uses: savvy-web/silk-runtime-action@v1
 
       - name: Run release
         uses: savvy-web/silk-release-action@v1
@@ -189,7 +189,7 @@ jobs:
 
       - name: Detect workflow phase
         id: control
-        uses: savvy-web/workflow-control-action@v1
+        uses: savvy-web/silk-router-action@v1
 
       - name: Display release info
         run: |
@@ -198,7 +198,7 @@ jobs:
           echo "Changeset count: ${{ steps.control.outputs.changeset_count }}"
 
       - name: Setup runtime
-        uses: savvy-web/workflow-runtime-action@v1
+        uses: savvy-web/silk-runtime-action@v1
 
       - name: Run validation
         run: |
@@ -238,7 +238,7 @@ jobs:
 
       - name: Detect workflow phase
         id: control
-        uses: savvy-web/workflow-control-action@v1
+        uses: savvy-web/silk-router-action@v1
 
   publish:
     name: Publish Packages
@@ -258,7 +258,7 @@ jobs:
 
       - name: Setup runtime
         id: runtime
-        uses: savvy-web/workflow-runtime-action@v1
+        uses: savvy-web/silk-runtime-action@v1
 
       - name: Run release
         uses: savvy-web/silk-release-action@v1
@@ -290,8 +290,8 @@ This action is part of a suite of **three companion actions** for release workfl
 
 | Action | Purpose | When to Use |
 | --- | --- | --- |
-| `workflow-control-action` | Pre-flight checks | Determine **IF** a workflow should run |
-| `workflow-runtime-action` | Runtime setup & caching | Set up Node.js, pnpm, and cache deps |
+| `silk-router-action` | Pre-flight checks | Determine **IF** a workflow should run |
+| `silk-runtime-action` | Runtime setup & caching | Set up Node.js, pnpm, and cache deps |
 | `silk-release-action` | Full release automation | Perform the actual release operations |
 
 ### Recommended Pattern
@@ -324,7 +324,7 @@ jobs:
 
       - name: Detect workflow phase
         id: control
-        uses: savvy-web/workflow-control-action@v1
+        uses: savvy-web/silk-router-action@v1
 
   release:
     name: Run Release
@@ -346,7 +346,7 @@ jobs:
 
       - name: Setup runtime
         id: runtime
-        uses: savvy-web/workflow-runtime-action@v1
+        uses: savvy-web/silk-runtime-action@v1
 
       - name: Run release
         uses: savvy-web/silk-release-action@v1
@@ -357,7 +357,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 ```
 
-The `workflow-runtime-action` handles Node.js setup, package manager detection (npm/pnpm/yarn), dependency installation, and intelligent caching. This ensures consistent, fast builds across all release phases.
+The `silk-runtime-action` handles Node.js setup, package manager detection (npm/pnpm/yarn), dependency installation, and intelligent caching. This ensures consistent, fast builds across all release phases.
 
 ## Job Summary Output
 
@@ -376,7 +376,7 @@ This summary appears in the GitHub Actions UI under the job's summary tab.
 ### Custom Release Branch Names
 
 ```yaml
-- uses: savvy-web/workflow-control-action@v1
+- uses: savvy-web/silk-router-action@v1
   with:
     release-branch: releases/next
     target-branch: main
@@ -388,7 +388,7 @@ This summary appears in the GitHub Actions UI under the job's summary tab.
 jobs:
   control:
     steps:
-      - uses: savvy-web/workflow-control-action@v1
+      - uses: savvy-web/silk-router-action@v1
         id: control
 
   always-run:
@@ -410,7 +410,7 @@ jobs:
 All outputs are available for debugging:
 
 ```yaml
-- uses: savvy-web/workflow-control-action@v1
+- uses: savvy-web/silk-router-action@v1
   id: control
 
 - name: Debug outputs
@@ -439,4 +439,4 @@ MIT
 
 **Maintainer**: [savvy-web](https://github.com/savvy-web)
 
-**Issues**: [Report bugs or request features](https://github.com/savvy-web/workflow-control-action/issues)
+**Issues**: [Report bugs or request features](https://github.com/savvy-web/silk-router-action/issues)
