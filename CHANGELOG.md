@@ -1,5 +1,11 @@
 # @savvy-web/workflow-control-action
 
+## 1.0.3
+
+### Other
+
+* [`2b1d50b`](https://github.com/savvy-web/silk-router-action/commit/2b1d50b56a5eabdc08fafcb0f1a077e673aed5ee) Migrate to new `@savvy-web/silk` dependency system.
+
 ## 1.0.2
 
 ### Dependencies
