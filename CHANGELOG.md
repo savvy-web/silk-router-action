@@ -1,5 +1,11 @@
 # @savvy-web/workflow-control-action
 
+## 1.0.4
+
+### Other
+
+* [`56cc2a6`](https://github.com/savvy-web/silk-router-action/commit/56cc2a65be3c9b75b2dc80e80612df4bc9772cd1) Upgrade to silk-release-action v2.
+
 ## 1.0.3
 
 ### Other
