@@ -1,5 +1,23 @@
 # @savvy-web/workflow-control-action
 
+## 1.0.5
+
+### Dependencies
+
+* | [`01b0b83`](https://github.com/savvy-web/silk-router-action/commit/01b0b83cba71224ed9f3fb0d30c8cd139b22db9e) | Dependency    | Type    | Action | From   | To |
+  | :----------------------------------------------------------------------------------------------------------- | :------------ | :------ | :----- | :----- | -- |
+  | @savvy-web/github-action-effects                                                                             | dependency    | updated | ^2.1.3 | ^2.1.4 |    |
+  | @savvy-web/github-action-builder                                                                             | devDependency | updated | ^0.7.6 | ^0.7.8 |    |
+  | @savvy-web/silk                                                                                              | devDependency | updated | ^0.4.0 | ^0.4.2 |    |
+  | @savvy-web/vitest                                                                                            | devDependency | updated | ^1.4.0 | ^1.5.0 |    |
+
+- | [`b8ef8c2`](https://github.com/savvy-web/silk-router-action/commit/b8ef8c269e581f252156e35c64f1f581a7029f2d) | Dependency    | Type    | Action   | From     | To |
+  | :----------------------------------------------------------------------------------------------------------- | :------------ | :------ | :------- | :------- | -- |
+  | @effect/platform-node                                                                                        | dependency    | updated | ^0.106.0 | ^0.107.0 |    |
+  | effect                                                                                                       | dependency    | updated | ^3.21.2  | ^3.21.3  |    |
+  | @savvy-web/github-action-builder                                                                             | devDependency | updated | ^0.7.8   | ^0.7.9   |    |
+  | @savvy-web/silk                                                                                              | devDependency | updated | ^0.4.2   | ^1.1.0   |    |
+
 ## 1.0.4
 
 ### Other
