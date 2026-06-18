@@ -23,6 +23,9 @@ interface AssociatedPR {
 
 const truncate = (s: string, n = 100): string => (s.length > n ? `${s.substring(0, n)}...` : s.substring(0, n));
 
+const RELEASE_DETECT_ATTEMPTS = 3;
+const RELEASE_DETECT_DELAY = "10 seconds";
+
 const detectReleaseCommitFromMessage = (
 	commitMessage: string,
 	releaseBranch: string,
@@ -45,6 +48,7 @@ export class PhaseDetector extends Context.Tag("silk-router-action/PhaseDetector
 		readonly detect: (options: {
 			readonly releaseBranch: string;
 			readonly targetBranch: string;
+			readonly releasePrefix?: string;
 		}) => Effect.Effect<PhaseDetectionResult, never>;
 	}
 >() {}
@@ -55,7 +59,7 @@ export const PhaseDetectorLive = Layer.effect(
 		const env = yield* ActionEnvironment;
 		const gh = yield* GitHubClient;
 		return {
-			detect: ({ releaseBranch, targetBranch }) =>
+			detect: ({ releaseBranch, targetBranch, releasePrefix }) =>
 				Effect.gen(function* () {
 					const github = yield* env.github.pipe(Effect.orDie);
 					const payload = (yield* env.payload.pipe(Effect.orDie)) as unknown as PayloadSubset;
@@ -103,28 +107,52 @@ export const PhaseDetectorLive = Layer.effect(
 					let isReleaseCommit = false;
 					let mergedReleasePRNumber: number | undefined;
 					if (isMainBranch && github.eventName === "push") {
-						const associated = yield* gh
-							.rest<ReadonlyArray<AssociatedPR>>(
-								"listPullRequestsAssociatedWithCommit",
-								// biome-ignore lint/suspicious/noExplicitAny: Octokit shape is opaque to the library
-								async (octokit: any) =>
-									octokit.rest.repos.listPullRequestsAssociatedWithCommit({
-										owner: ghRepo.owner,
-										repo: ghRepo.repo,
-										commit_sha: github.sha,
-									}),
-							)
-							.pipe(
-								Effect.catchAllCause(() =>
-									Effect.gen(function* () {
-										yield* Effect.logWarning("PR-association API failed; falling back to commit-message detection");
-										return [] as ReadonlyArray<AssociatedPR>;
-									}),
+						// Effect.suspend rebuilds the lookup on every evaluation so each retry re-issues the API call (not a replayed cached result).
+						const findMergedReleasePR = Effect.suspend(() =>
+							gh
+								.rest<ReadonlyArray<AssociatedPR>>(
+									"listPullRequestsAssociatedWithCommit",
+									// biome-ignore lint/suspicious/noExplicitAny: Octokit shape is opaque to the library
+									async (octokit: any) =>
+										octokit.rest.repos.listPullRequestsAssociatedWithCommit({
+											owner: ghRepo.owner,
+											repo: ghRepo.repo,
+											commit_sha: github.sha,
+										}),
+								)
+								.pipe(
+									Effect.map((associated) =>
+										associated.find(
+											(p) => p.merged_at !== null && p.head.ref === releaseBranch && p.base.ref === targetBranch,
+										),
+									),
+									Effect.catchAllCause(() =>
+										Effect.gen(function* () {
+											yield* Effect.logWarning("PR-association API failed; falling back to commit-message detection");
+											return undefined as AssociatedPR | undefined;
+										}),
+									),
 								),
-							);
-						const mergedPR = associated.find(
-							(p) => p.merged_at !== null && p.head.ref === releaseBranch && p.base.ref === targetBranch,
 						);
+
+						const findWithRetry = (attemptsLeft: number): Effect.Effect<AssociatedPR | undefined, never> =>
+							Effect.gen(function* () {
+								const pr = yield* findMergedReleasePR;
+								if (pr !== undefined || attemptsLeft <= 0) {
+									return pr;
+								}
+								yield* Effect.logInfo(
+									`Release-prefixed commit but PR association not yet visible; retrying in ${RELEASE_DETECT_DELAY} (${attemptsLeft} attempt(s) left)`,
+								);
+								yield* Effect.sleep(RELEASE_DETECT_DELAY);
+								return yield* findWithRetry(attemptsLeft - 1);
+							});
+
+						const expectsRelease = Boolean(releasePrefix) && commitMessage.startsWith(releasePrefix as string);
+						const mergedPR = expectsRelease
+							? yield* findWithRetry(RELEASE_DETECT_ATTEMPTS)
+							: yield* findMergedReleasePR;
+
 						if (mergedPR) {
 							isReleaseCommit = true;
 							mergedReleasePRNumber = mergedPR.number;

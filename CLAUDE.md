@@ -26,6 +26,10 @@ inputs:
   description: Target branch name (usually main)
   required: false
   default: main
+ release-prefix:
+  description: Commit-message prefix that gates release-detection retry on the target branch
+  required: false
+  default: "release:"
 
 outputs:
  phase:              # Detected workflow phase (branch-management | validation | publishing | close-issues | none)
@@ -200,7 +204,7 @@ The core detection algorithm:
 4. **Phase 1 (branch-management):** Push to main, non-release commit.
 5. **none:** Any other scenario.
 
-Release commits are detected primarily via GitHub API query for PRs associated with the commit; falls back to commit-message patterns (e.g. "chore: version packages", merge commit patterns) on API failure.
+Release commits are detected primarily via GitHub API query for PRs associated with the commit; falls back to commit-message patterns (e.g. "chore: version packages", merge commit patterns) on API failure. When the head commit message on the target branch starts with `release-prefix` (default `release:`) but no merged release PR is yet associated with the commit, detection is retried up to 3 times, 10 seconds apart, to absorb GitHub's PR-association propagation lag before falling back to branch-management.
 
 ## Code Style
 

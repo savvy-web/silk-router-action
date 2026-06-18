@@ -10,11 +10,15 @@ import { writeJobSummary } from "./services/summary.js";
 export const program = Effect.gen(function* () {
 	const releaseBranch = yield* Config.string("release-branch").pipe(Config.withDefault("changeset-release/main"));
 	const targetBranch = yield* Config.string("target-branch").pipe(Config.withDefault("main"));
+	const releasePrefix = yield* Config.string("release-prefix").pipe(Config.withDefault("release:"));
 
 	const outputs = yield* ActionOutputs;
 	const detector = yield* PhaseDetector;
 
-	const phase = yield* Step.groupStep("Detect workflow phase", detector.detect({ releaseBranch, targetBranch }));
+	const phase = yield* Step.groupStep(
+		"Detect workflow phase",
+		detector.detect({ releaseBranch, targetBranch, releasePrefix }),
+	);
 	const changesets = yield* Step.groupStep("Parse changesets", parseChangesets());
 
 	yield* Step.groupStep(
