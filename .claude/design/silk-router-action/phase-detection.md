@@ -183,10 +183,10 @@ To avoid retrying on every push to main, the algorithm first checks whether the 
 
 The retry applies exclusively to the push-to-main code path (the release-commit detection step in the decision tree). It does not affect `pull_request` events or pushes to the release branch.
 
-- **Attempts:** 3
-- **Delay between attempts:** 10 seconds
-- **Early stop:** if any attempt returns a confirmed release commit, the loop exits immediately and routes to `publishing`
-- **Constants:** `RELEASE_DETECT_ATTEMPTS = 3`, `RELEASE_DETECT_DELAY = 10_000` (defined once in `phase-detector.ts`)
+- **Retry budget:** `RELEASE_DETECT_ATTEMPTS = 3` retries after the initial lookup — up to **4 lookups total**
+- **Delay between lookups:** 10 seconds (`RELEASE_DETECT_DELAY = "10 seconds"`)
+- **Early stop:** as soon as any lookup returns a confirmed release commit, the loop exits and routes to `publishing`
+- **Constants:** `RELEASE_DETECT_ATTEMPTS` and `RELEASE_DETECT_DELAY` are defined once in `phase-detector.ts`
 
 ### API remains authoritative
 
@@ -194,7 +194,7 @@ The `release-prefix` value never sets `is_release_commit` by itself — it only 
 
 ### Exhaustion fallback
 
-If all 3 attempts exhaust without a confirmed release PR association, the algorithm falls through to `branch-management` (Phase 1). This is intentional: it is safer to trigger an idempotent branch-management run than to incorrectly route to `publishing`. The operator can re-run the workflow manually if needed.
+If the initial lookup and all 3 retries (4 lookups total) return without a confirmed release PR association, the algorithm falls through to `branch-management` (Phase 1). This is intentional: it is safer to trigger an idempotent branch-management run than to incorrectly route to `publishing`. The operator can re-run the workflow manually if needed.
 
 ## PhaseDetectionResult interface
 
