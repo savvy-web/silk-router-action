@@ -1,6 +1,6 @@
 import { GitHubClient } from "@savvy-web/github-action-effects";
 import { ActionEnvironmentTest } from "@savvy-web/github-action-effects/testing";
-import { Effect, Layer } from "effect";
+import { Effect, Fiber, Layer, TestClock, TestContext } from "effect";
 import { describe, expect, it } from "vitest";
 import { PhaseDetector, PhaseDetectorLive } from "./phase-detector.js";
 
@@ -468,5 +468,110 @@ describe("PhaseDetector", () => {
 			[],
 		);
 		expect(result.phase).toBe("branch-management");
+	});
+
+	// --- prefix-aware retry on the push-to-main path ---
+
+	const mainPushEnv = {
+		GITHUB_REF: "refs/heads/main",
+		GITHUB_EVENT_NAME: "push",
+		GITHUB_SHA: "abc",
+		GITHUB_REPOSITORY: "owner/repo",
+	};
+	const mergedReleasePR = {
+		number: 42,
+		merged_at: "2024-01-01T00:00:00Z",
+		head: { ref: "changeset-release/main" },
+		base: { ref: "main" },
+	};
+
+	// Build a GitHubClient whose listPullRequestsAssociatedWithCommit returns
+	// `emptyUntil - 1` empty results, then the merged release PR. Counts calls.
+	const makeCountingGh = (emptyUntil: number, counter: { calls: number }) =>
+		Layer.succeed(GitHubClient, {
+			rest: (() => {
+				counter.calls += 1;
+				const data = counter.calls >= emptyUntil ? [mergedReleasePR] : [];
+				return Effect.succeed(data);
+			}) as never,
+			graphql: () => Effect.die("graphql unused"),
+			paginate: () => Effect.die("paginate unused"),
+			paginateStream: () => Effect.die("paginateStream unused"),
+			repo: Effect.succeed({ owner: "owner", repo: "repo" }),
+		});
+
+	const detectWithPrefix = (gh: Layer.Layer<GitHubClient>, message: string, releasePrefix: string) =>
+		Effect.gen(function* () {
+			const svc = yield* PhaseDetector;
+			return yield* svc.detect({ releaseBranch: "changeset-release/main", targetBranch: "main", releasePrefix });
+		}).pipe(
+			Effect.provide(
+				PhaseDetectorLive.pipe(
+					Layer.provide(
+						Layer.mergeAll(ActionEnvironmentTest.layer(mainPushEnv, { head_commit: { message } } as never), gh),
+					),
+				),
+			),
+		);
+
+	it("retries a release-prefixed commit until the PR association appears", async () => {
+		const counter = { calls: 0 };
+		const result = await Effect.runPromise(
+			Effect.gen(function* () {
+				const fiber = yield* Effect.fork(
+					detectWithPrefix(makeCountingGh(3, counter), "release: 1.2.3 (#42)", "release:"),
+				);
+				yield* TestClock.adjust("30 seconds");
+				return yield* Fiber.join(fiber);
+			}).pipe(Effect.provide(TestContext.TestContext)),
+		);
+		expect(result.phase).toBe("publishing");
+		expect(result.isReleaseCommit).toBe(true);
+		expect(result.mergedReleasePRNumber).toBe(42);
+		expect(counter.calls).toBe(3);
+	});
+
+	it("falls back to branch-management when retries exhaust without a PR association", async () => {
+		const counter = { calls: 0 };
+		const result = await Effect.runPromise(
+			Effect.gen(function* () {
+				// emptyUntil=99 → always empty
+				const fiber = yield* Effect.fork(
+					detectWithPrefix(makeCountingGh(99, counter), "release: 9.9.9 (#7)", "release:"),
+				);
+				yield* TestClock.adjust("40 seconds");
+				return yield* Fiber.join(fiber);
+			}).pipe(Effect.provide(TestContext.TestContext)),
+		);
+		expect(result.phase).toBe("branch-management");
+		expect(result.isReleaseCommit).toBe(false);
+		expect(counter.calls).toBe(4); // 1 initial + 3 retries
+	});
+
+	it("returns immediately when the PR association is present on the first try", async () => {
+		const counter = { calls: 0 };
+		// No TestClock needed: the PR is found on call 1, so no sleep occurs.
+		const result = await Effect.runPromise(
+			detectWithPrefix(makeCountingGh(1, counter), "release: 2.0.0 (#9)", "release:"),
+		);
+		expect(result.phase).toBe("publishing");
+		expect(result.mergedReleasePRNumber).toBe(42);
+		expect(counter.calls).toBe(1);
+	});
+
+	it("does not retry when the commit message lacks the release prefix", async () => {
+		const counter = { calls: 0 };
+		const result = await Effect.runPromise(
+			detectWithPrefix(makeCountingGh(99, counter), "feat: add thing", "release:"),
+		);
+		expect(result.phase).toBe("branch-management");
+		expect(counter.calls).toBe(1);
+	});
+
+	it("does not retry when release-prefix is empty (empty-prefix guard)", async () => {
+		const counter = { calls: 0 };
+		const result = await Effect.runPromise(detectWithPrefix(makeCountingGh(99, counter), "release: 1.0.0 (#1)", ""));
+		expect(result.phase).toBe("branch-management");
+		expect(counter.calls).toBe(1);
 	});
 });

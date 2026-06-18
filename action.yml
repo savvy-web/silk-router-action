@@ -18,6 +18,15 @@ inputs:
     description: Target branch name (usually main)
     required: false
     default: main
+  release-prefix:
+    description: |
+      Commit-message prefix marking an expected release-PR merge on the target
+      branch. When a push to the target branch has a commit message starting
+      with this prefix but the merged release PR is not yet associated with the
+      commit (GitHub eventual consistency), detection is retried up to 3 times,
+      10s apart, before falling back to branch-management. Empty disables retry.
+    required: false
+    default: "release:"
 
 outputs:
   phase:
