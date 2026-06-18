@@ -107,6 +107,7 @@ export const PhaseDetectorLive = Layer.effect(
 					let isReleaseCommit = false;
 					let mergedReleasePRNumber: number | undefined;
 					if (isMainBranch && github.eventName === "push") {
+						// Effect.suspend rebuilds the lookup on every evaluation so each retry re-issues the API call (not a replayed cached result).
 						const findMergedReleasePR = Effect.suspend(() =>
 							gh
 								.rest<ReadonlyArray<AssociatedPR>>(
