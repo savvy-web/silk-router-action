@@ -574,4 +574,28 @@ describe("PhaseDetector", () => {
 		expect(result.phase).toBe("branch-management");
 		expect(counter.calls).toBe(1);
 	});
+
+	it("falls back to branch-management when the API fails on every retry attempt", async () => {
+		const counter = { calls: 0 };
+		const failingCountingGh = Layer.succeed(GitHubClient, {
+			rest: (() => {
+				counter.calls += 1;
+				return Effect.die("api down");
+			}) as never,
+			graphql: () => Effect.die("graphql unused"),
+			paginate: () => Effect.die("paginate unused"),
+			paginateStream: () => Effect.die("paginateStream unused"),
+			repo: Effect.succeed({ owner: "owner", repo: "repo" }),
+		});
+		const result = await Effect.runPromise(
+			Effect.gen(function* () {
+				const fiber = yield* Effect.fork(detectWithPrefix(failingCountingGh, "release: 9.9.9 (#7)", "release:"));
+				yield* TestClock.adjust("40 seconds");
+				return yield* Fiber.join(fiber);
+			}).pipe(Effect.provide(TestContext.TestContext)),
+		);
+		expect(result.phase).toBe("branch-management");
+		expect(result.isReleaseCommit).toBe(false);
+		expect(counter.calls).toBe(4); // 1 initial + 3 retries, each API failure caught and treated as "not found"
+	});
 });
