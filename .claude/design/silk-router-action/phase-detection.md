@@ -167,6 +167,35 @@ A commit matching any merge pattern or any version pattern is classified as a re
 | Network required | Yes | No |
 | Speed | Slower (API call) | Instant |
 
+## Bounded retry on the push-to-main path
+
+### Problem: PR-association propagation lag
+
+When GitHub merges a release PR, the push event to the target branch can arrive before GitHub's internal indexing has associated that merged PR with the new commit. In this window the API returns an empty array, causing the algorithm to fall through to `branch-management` and trigger an unwanted second run of the release-branch phase.
+
+### Retry gate: `release-prefix` input
+
+To avoid retrying on every push to main, the algorithm first checks whether the head commit message starts with the `release-prefix` input value (default `"release:"`). Only when this prefix matches does it enter the retry loop.
+
+**Empty-prefix guard:** If `release-prefix` is set to the empty string `""`, then `"".startsWith("")` evaluates to `true` for every commit message, which would retry every single push to main regardless of content. To prevent this, the retry is skipped when `releasePrefix` is an empty string (`Boolean(releasePrefix) && commitMessage.startsWith(releasePrefix)`). Consumers should not set the input to `""`.
+
+### Retry loop (push-to-main path only)
+
+The retry applies exclusively to the push-to-main code path (the release-commit detection step in the decision tree). It does not affect `pull_request` events or pushes to the release branch.
+
+- **Attempts:** 3
+- **Delay between attempts:** 10 seconds
+- **Early stop:** if any attempt returns a confirmed release commit, the loop exits immediately and routes to `publishing`
+- **Constants:** `RELEASE_DETECT_ATTEMPTS = 3`, `RELEASE_DETECT_DELAY = 10_000` (defined once in `phase-detector.ts`)
+
+### API remains authoritative
+
+The `release-prefix` value never sets `is_release_commit` by itself — it only controls whether the retry loop runs. The GitHub API remains the sole authority for `is_release_commit`. The commit-message fallback strategy is not consulted during the retry loop.
+
+### Exhaustion fallback
+
+If all 3 attempts exhaust without a confirmed release PR association, the algorithm falls through to `branch-management` (Phase 1). This is intentional: it is safer to trigger an idempotent branch-management run than to incorrectly route to `publishing`. The operator can re-run the workflow manually if needed.
+
 ## PhaseDetectionResult interface
 
 The `detect` method returns a `PhaseDetectionResult` (defined in `src/schemas/domain.ts`) with these fields:

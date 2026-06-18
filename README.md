@@ -61,6 +61,7 @@ All inputs are optional with sensible defaults.
 | `token` | GitHub token for API calls (detects merged PRs) | No | `${{ github.token }}` |
 | `release-branch` | Release branch name | No | `changeset-release/main` |
 | `target-branch` | Target branch name (usually main) | No | `main` |
+| `release-prefix` | Commit-message prefix that gates release-detection retry on the target branch | No | `release:` |
 
 ## Outputs
 
