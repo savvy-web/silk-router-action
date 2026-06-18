@@ -1,5 +1,22 @@
 # @savvy-web/workflow-control-action
 
+## 1.1.0
+
+### Features
+
+* [`1e311b4`](https://github.com/savvy-web/silk-router-action/commit/1e311b487836ae0b1329352d0a2bf0b93c914678) ### Retry When a Commit Looks Like a Release
+
+Add a `release-prefix` input (default `release:`). When a push to the target branch carries a commit whose message starts with the prefix but GitHub has not yet associated the merged release PR with the commit, the router now retries detection up to 3 times, 10 seconds apart, before falling back to branch-management. This fixes the race where an auto-merged release PR was misrouted to the branch-management phase and had to be re-run manually. The prefix only gates the retry; the GitHub API remains the sole authority for `is_release_commit`.
+
+### Dependencies
+
+* | [`1e311b4`](https://github.com/savvy-web/silk-router-action/commit/1e311b487836ae0b1329352d0a2bf0b93c914678) | Dependency    | Type    | Action | From    | To |
+  | :----------------------------------------------------------------------------------------------------------- | :------------ | :------ | :----- | :------ | -- |
+  | @savvy-web/github-action-effects                                                                             | dependency    | updated | ^2.1.4 | ^2.2.1  |    |
+  | @savvy-web/github-action-builder                                                                             | devDependency | updated | ^0.7.9 | ^0.7.11 |    |
+  | @savvy-web/silk                                                                                              | devDependency | updated | ^1.1.0 | ^1.2.0  |    |
+  | @savvy-web/vitest                                                                                            | devDependency | updated | ^1.5.0 | ^1.5.1  |    |
+
 ## 1.0.5
 
 ### Dependencies
