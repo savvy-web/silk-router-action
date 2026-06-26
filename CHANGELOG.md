@@ -1,5 +1,14 @@
 # @savvy-web/workflow-control-action
 
+## 1.1.2
+
+### Dependencies
+
+* | [`1ffd724`](https://github.com/savvy-web/silk-router-action/commit/1ffd7242f9109ecd6c40c66df70b7a0daaf76626) | Dependency    | Type    | Action | From   | To |
+  | :----------------------------------------------------------------------------------------------------------- | :------------ | :------ | :----- | :----- | -- |
+  | @savvy-web/github-action-effects                                                                             | dependency    | updated | ^2.3.0 | ^2.3.1 |    |
+  | @savvy-web/silk                                                                                              | devDependency | updated | ^1.3.3 | ^1.3.4 |    |
+
 ## 1.1.1
 
 ### Dependencies
