@@ -1,5 +1,6 @@
 // src/program.test.ts
 import * as fs from "node:fs";
+import { NodeFileSystem } from "@effect/platform-node";
 import { GitHubClient } from "@savvy-web/github-action-effects";
 import { ActionEnvironmentTest, ActionLoggerTest, ActionOutputsTest } from "@savvy-web/github-action-effects/testing";
 import { ConfigProvider, Effect, Layer, Logger } from "effect";
@@ -39,6 +40,7 @@ const runProgram = (input: {
 		ActionLoggerTest.layer(ActionLoggerTest.empty()),
 		ActionEnvironmentTest.layer(input.env, input.payload as never),
 		makeGh(input.associated ?? []),
+		NodeFileSystem.layer,
 	);
 	const fullLayer = Layer.provideMerge(PhaseDetectorLive, baseLayer);
 	const configProvider = ConfigProvider.fromMap(new Map(Object.entries(input.inputs ?? {})));

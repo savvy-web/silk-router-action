@@ -1,3 +1,4 @@
+import { FileSystem } from "@effect/platform";
 import { ActionEnvironment, GitHubClient } from "@savvy-web/github-action-effects";
 import { Context, Effect, Layer } from "effect";
 import type { PhaseDetectionResult, WorkflowPhase } from "../schemas/domain.js";
@@ -58,11 +59,17 @@ export const PhaseDetectorLive = Layer.effect(
 	Effect.gen(function* () {
 		const env = yield* ActionEnvironment;
 		const gh = yield* GitHubClient;
+		// `env.payload` reads $GITHUB_EVENT_PATH via the platform FileSystem service
+		// (github-action-effects >= 2.1). Capture it here so `detect` stays R = never.
+		const fs = yield* FileSystem.FileSystem;
 		return {
 			detect: ({ releaseBranch, targetBranch, releasePrefix }) =>
 				Effect.gen(function* () {
 					const github = yield* env.github.pipe(Effect.orDie);
-					const payload = (yield* env.payload.pipe(Effect.orDie)) as unknown as PayloadSubset;
+					const payload = (yield* env.payload.pipe(
+						Effect.provideService(FileSystem.FileSystem, fs),
+						Effect.orDie,
+					)) as unknown as PayloadSubset;
 					const ghRepo = yield* gh.repo.pipe(Effect.orDie);
 
 					const commitMessage = payload.head_commit?.message ?? "";
