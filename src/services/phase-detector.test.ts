@@ -1,3 +1,4 @@
+import { NodeFileSystem } from "@effect/platform-node";
 import { GitHubClient } from "@savvy-web/github-action-effects";
 import { ActionEnvironmentTest } from "@savvy-web/github-action-effects/testing";
 import { Effect, Fiber, Layer, TestClock, TestContext } from "effect";
@@ -37,7 +38,11 @@ const runDetect = (
 			Effect.provide(
 				PhaseDetectorLive.pipe(
 					Layer.provide(
-						Layer.mergeAll(ActionEnvironmentTest.layer(env, payload as never), makeGhClient(associatedPRs)),
+						Layer.mergeAll(
+							ActionEnvironmentTest.layer(env, payload as never),
+							makeGhClient(associatedPRs),
+							NodeFileSystem.layer,
+						),
 					),
 				),
 			),
@@ -148,6 +153,7 @@ describe("PhaseDetector", () => {
 									{ head_commit: { message: "chore: version packages" } } as never,
 								),
 								failingGh,
+								NodeFileSystem.layer,
 							),
 						),
 					),
@@ -320,6 +326,7 @@ describe("PhaseDetector", () => {
 									{ head_commit: { message: "chore: release v1.0.0\n\nVersion Packages" } } as never,
 								),
 								failingGh,
+								NodeFileSystem.layer,
 							),
 						),
 					),
@@ -359,6 +366,7 @@ describe("PhaseDetector", () => {
 									} as never,
 								),
 								failingGh,
+								NodeFileSystem.layer,
 							),
 						),
 					),
@@ -389,6 +397,7 @@ describe("PhaseDetector", () => {
 									{ head_commit: { message: "ci: bump" } } as never,
 								),
 								makeGhClient([]),
+								NodeFileSystem.layer,
 							),
 						),
 					),
@@ -508,7 +517,11 @@ describe("PhaseDetector", () => {
 			Effect.provide(
 				PhaseDetectorLive.pipe(
 					Layer.provide(
-						Layer.mergeAll(ActionEnvironmentTest.layer(mainPushEnv, { head_commit: { message } } as never), gh),
+						Layer.mergeAll(
+							ActionEnvironmentTest.layer(mainPushEnv, { head_commit: { message } } as never),
+							gh,
+							NodeFileSystem.layer,
+						),
 					),
 				),
 			),

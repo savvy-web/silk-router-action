@@ -1,5 +1,11 @@
 # @savvy-web/workflow-control-action
 
+## 1.1.4
+
+### Bug Fixes
+
+* [`bed4533`](https://github.com/savvy-web/silk-router-action/commit/bed45330a158bdf8e7c47f28965c9560aa41e679) Explicitly declare `@types/node` version.
+
 ## 1.1.3
 
 ### Dependencies
