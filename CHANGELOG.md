@@ -1,5 +1,11 @@
 # @savvy-web/workflow-control-action
 
+## 1.1.5
+
+### Bug Fixes
+
+* Patch release for new github-action-effects
+
 ## 1.1.4
 
 ### Bug Fixes
