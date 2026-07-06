@@ -103,11 +103,12 @@ Load when adding new error types, modifying `Schema.TaggedError` classes, or und
 ## Technical Stack
 
 - **Effect** for typed errors, dependency injection, and service composition.
-- **`@savvy-web/github-action-effects` ^2.0.0** — provides `Step.groupStep` for buffered logging, `GithubMarkdown.*` for summary helpers, `ActionInput.*` for typed input parsing, library `<Service>Test` test layers (via `@savvy-web/github-action-effects/testing`).
-- **`@savvy-web/github-action-builder` ^0.7.1** (rsbuild-based) configured via `action.config.ts`.
+- **`@savvy-web/github-action-effects` ^2.3.5** — provides `Step.groupStep` for buffered logging, `GithubMarkdown.*` for summary helpers, `ActionInput.*` for typed input parsing, library `<Service>Test` test layers (via `@savvy-web/github-action-effects/testing`).
+- **`@savvy-web/github-action-builder` ^1.1.0** (rsbuild-based) configured via `action.config.ts`.
 - **`@effect/platform`, `@effect/platform-node`** at catalog:silk.
-- **pnpm 10.33.4**, **Node 26.2.0** (`devEngines.runtime`); the action itself bundles to `runs.using: node24` (the latest supported by GitHub Actions runners today).
-- **Biome 2.4.15** with strict rules.
+- **`@savvy-web/silk` ^2.0.0** release toolchain (silk-effects 3.0.0, changesets v3 engine); `@changesets/cli` ^3.0.0-next.8 is a direct devDependency to satisfy silk's peer range.
+- **pnpm 11.9.0**, **Node 26.4.0** (`devEngines.runtime`); the action itself bundles to `runs.using: node24` (the latest supported by GitHub Actions runners today).
+- **Biome 2.5.1** with strict rules.
 - **Vitest** with Effect test layers.
 - **Type checking:** TypeScript Native Preview (`tsgo --noEmit`).
 - **Direct dependencies:** Zero `@actions/*` packages — all GitHub Actions integration is provided by `@savvy-web/github-action-effects`.
