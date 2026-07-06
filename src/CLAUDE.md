@@ -10,9 +10,9 @@ The source tree follows an Effect-based layered architecture using `@savvy-web/g
 
 **Design documentation for this directory:**
 
-- Architecture and layer wiring → `@./.claude/design/silk-router-action/architecture.md` — Load when modifying `layers/app.ts`, adding services, or changing the Effect pipeline structure.
-- Phase detection algorithm → `@./.claude/design/silk-router-action/phase-detection.md` — Load when working on `services/phase-detector.ts` or adding new workflow phases.
-- Error model and effects library adoption → `@./.claude/design/silk-router-action/error-model.md` — Load when adding or changing `Schema.TaggedError` classes in `errors/errors.ts`, or when understanding why `@actions/*` packages are absent.
+- Architecture and layer wiring → `@../.claude/design/silk-router-action/architecture.md` — Load when modifying `layers/app.ts`, adding services, or changing the Effect pipeline structure.
+- Phase detection algorithm → `@../.claude/design/silk-router-action/phase-detection.md` — Load when working on `services/phase-detector.ts` or adding new workflow phases.
+- Error model and effects library adoption → `@../.claude/design/silk-router-action/error-model.md` — Load when adding or changing `Schema.TaggedError` classes in `errors/errors.ts`, or when understanding why `@actions/*` packages are absent.
 
 ## Layout
 

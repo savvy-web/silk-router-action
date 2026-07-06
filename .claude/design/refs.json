@@ -1,0 +1,41 @@
+{
+	"version": 1,
+	"refs": [
+		{
+			"source": "CLAUDE.md",
+			"target": ".claude/design/silk-router-action/architecture.md",
+			"hash": "b3bf580980205d385215b0cf6a330ba486eb2969debe4d2c7bc9155afac9a6ae",
+			"recordedAt": "2026-07-05"
+		},
+		{
+			"source": "CLAUDE.md",
+			"target": ".claude/design/silk-router-action/error-model.md",
+			"hash": "9958a1d290cc890e51111318ec212394088e9d9edaa8d4a30e7be840ae050cef",
+			"recordedAt": "2026-07-05"
+		},
+		{
+			"source": "CLAUDE.md",
+			"target": ".claude/design/silk-router-action/phase-detection.md",
+			"hash": "b35b3658756f578b9ed3a10d07772fb28e696fd3a879a83c6768b9bde8aa385f",
+			"recordedAt": "2026-07-05"
+		},
+		{
+			"source": "src/CLAUDE.md",
+			"target": ".claude/design/silk-router-action/architecture.md",
+			"hash": "b3bf580980205d385215b0cf6a330ba486eb2969debe4d2c7bc9155afac9a6ae",
+			"recordedAt": "2026-07-05"
+		},
+		{
+			"source": "src/CLAUDE.md",
+			"target": ".claude/design/silk-router-action/error-model.md",
+			"hash": "9958a1d290cc890e51111318ec212394088e9d9edaa8d4a30e7be840ae050cef",
+			"recordedAt": "2026-07-05"
+		},
+		{
+			"source": "src/CLAUDE.md",
+			"target": ".claude/design/silk-router-action/phase-detection.md",
+			"hash": "b35b3658756f578b9ed3a10d07772fb28e696fd3a879a83c6768b9bde8aa385f",
+			"recordedAt": "2026-07-05"
+		}
+	]
+}
