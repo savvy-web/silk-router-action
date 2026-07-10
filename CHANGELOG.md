@@ -1,5 +1,15 @@
 # @savvy-web/workflow-control-action
 
+## 1.1.7
+
+### Other
+
+* Force bump to release latest `@savvy-web/github-action-effects`.
+
+### Patch Changes
+
+Thanks to [@spencerbeggs](https://github.com/spencerbeggs) for their contributions!
+
 ## 1.1.6
 
 ### Dependencies
