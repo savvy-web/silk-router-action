@@ -69,8 +69,8 @@ importers:
         specifier: ^1.1.2
         version: 1.1.2(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/workflow@0.18.2(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4))(@types/node@26.1.1)(typescript@7.0.2)
       '@savvy-web/silk':
-        specifier: ^2.4.1
-        version: 2.4.1(@changesets/cli@3.0.0-next.8)(@commitlint/cli@21.2.1(@types/node@26.1.1)(conventional-commits-parser@7.1.0)(typescript@7.0.2))(@commitlint/config-conventional@21.2.0)(@types/node@26.1.1)(husky@9.1.7)(lint-staged@17.0.8)(markdownlint-cli2-formatter-codequality@0.0.7(markdownlint-cli2@0.23.0))(markdownlint-cli2@0.23.0)(turbo@2.10.4)(typescript@7.0.2)
+        specifier: ^2.4.2
+        version: 2.4.2(@changesets/cli@3.0.0-next.8)(@commitlint/cli@21.2.1(@types/node@26.1.1)(conventional-commits-parser@7.1.0)(typescript@7.0.2))(@commitlint/config-conventional@21.2.0)(@types/node@26.1.1)(husky@9.1.7)(lint-staged@17.0.8)(markdownlint-cli2-formatter-codequality@0.0.7(markdownlint-cli2@0.23.0))(markdownlint-cli2@0.23.0)(turbo@2.10.4)(typescript@7.0.2)
       '@types/node':
         specifier: catalog:silk
         version: 26.1.1
@@ -1008,8 +1008,8 @@ packages:
   '@savvy-web/changelog@0.1.1':
     resolution: {integrity: sha512-UR0PEbLzFlLpz78jIDxTAfSc73TVQoZNZfGGzeBFP/s6wG8y3m5KUJwzY6CsisBxJrI44wOMBYdWztTM21PgJw==}
 
-  '@savvy-web/cli@1.6.0':
-    resolution: {integrity: sha512-zKEY8Zo49Yw9xwFf4xBZ5RefoE30f9zq6Y0Ke5dlDbZQxAivXUTkYOeRZxhMkgz4CLlXMuDZbMWzBENezvkqDw==}
+  '@savvy-web/cli@1.6.1':
+    resolution: {integrity: sha512-QXa1W9ia69hm9Msxs0e23boX9L4IY0MagNYc40T84IoR2kLH5D1DMrFDLmM75B/t/Jc2+QhBWakFNc7x2QC+2w==}
     hasBin: true
 
   '@savvy-web/github-action-builder@1.1.2':
@@ -1026,18 +1026,18 @@ packages:
       '@effect/platform-node': ^0.107.0
       effect: ^3.21.0
 
-  '@savvy-web/mcp@1.8.0':
-    resolution: {integrity: sha512-3oDcswYOLiarTQaoHvmRQCm4YKWWKmM9Z5nX97fztnLlV00LhxxtDwEbqkoahvgIeg3onUAwdT1Pnxr7YwrEnA==}
+  '@savvy-web/mcp@1.8.1':
+    resolution: {integrity: sha512-iXURrG6Czk/XPaj+FGf7zDySCfm6IIH3S9h6pY/d4ivt8OTeLuCi3GXRGhp3KQfVa21SFOOg7eE0e08Oyo8Y8Q==}
     hasBin: true
 
-  '@savvy-web/silk-effects@3.3.0':
-    resolution: {integrity: sha512-15Zv8uXi8QdriNY4FGV1gqrC3e/mCFV+cA/p6tNs4YDbgKQo/NVJXiUnr5BbehoZ81AeUWJua3J7nNHjoDcoVw==}
+  '@savvy-web/silk-effects@3.3.1':
+    resolution: {integrity: sha512-dFdcjG/r2+kSjGsK8ODTD+9ZX6k2h4VKbLEUYN3Z/IFEsxLeBhcEPDOoVkKUm7LZNheM5WxmU5smLG9BNoX2ag==}
     peerDependencies:
       '@effect/platform': ^0.96.0
       effect: ^3.21.0
 
-  '@savvy-web/silk@2.4.1':
-    resolution: {integrity: sha512-wLrlUWqnGRa3mdwSKYNuwNdZQzPEjAl7NklqY+WEAccX0pbyDG573maD4vhOADJfrnZZkfVwU3xnl1NtKUposA==}
+  '@savvy-web/silk@2.4.2':
+    resolution: {integrity: sha512-nWYOXTeUpW87Z+V2febL489Madp/Lce1gUy/N5FO/b1DgLeAXflA5hGGwQE1oh/quJ5uk75VuahtLVOWXsi/wA==}
     peerDependencies:
       '@biomejs/biome': ~2.5.0
       '@changesets/cli': ^3.0.0-next.8
@@ -4441,7 +4441,7 @@ snapshots:
       jju: 1.4.0
       semver: 7.8.5
 
-  '@savvy-web/cli@1.6.0':
+  '@savvy-web/cli@1.6.1':
     dependencies:
       '@effect/cli': 0.75.2(@effect/platform@0.96.2(effect@3.21.4))(@effect/printer-ansi@0.49.0(@effect/typeclass@0.40.0(effect@3.21.4))(effect@3.21.4))(@effect/printer@0.49.0(@effect/typeclass@0.40.0(effect@3.21.4))(effect@3.21.4))(effect@3.21.4)
       '@effect/cluster': 0.59.0(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/sql@0.51.1(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/workflow@0.18.2(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4))(effect@3.21.4)
@@ -4454,7 +4454,7 @@ snapshots:
       '@effect/sql': 0.51.1(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)
       '@effect/typeclass': 0.40.0(effect@3.21.4)
       '@effect/workflow': 0.18.2(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4)
-      '@savvy-web/silk-effects': 3.3.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)
+      '@savvy-web/silk-effects': 3.3.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)
       effect: 3.21.4
       jsonc-effect: 0.3.1(effect@3.21.4)
       workspaces-effect: 2.1.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)
@@ -4517,7 +4517,7 @@ snapshots:
       - supports-color
       - xmlbuilder2
 
-  '@savvy-web/mcp@1.8.0':
+  '@savvy-web/mcp@1.8.1':
     dependencies:
       '@effect/cluster': 0.59.0(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/sql@0.51.1(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/workflow@0.18.2(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4))(effect@3.21.4)
       '@effect/experimental': 0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)
@@ -4527,7 +4527,7 @@ snapshots:
       '@effect/sql': 0.51.1(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)
       '@effect/workflow': 0.18.2(@effect/experimental@0.60.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(@effect/platform@0.96.2(effect@3.21.4))(@effect/rpc@0.75.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4))(effect@3.21.4)
       '@modelcontextprotocol/sdk': 1.29.0(zod@4.4.3)
-      '@savvy-web/silk-effects': 3.3.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)
+      '@savvy-web/silk-effects': 3.3.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)
       effect: 3.21.4
       workspaces-effect: 2.1.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)
       zod: 4.4.3
@@ -4539,7 +4539,7 @@ snapshots:
       - supports-color
       - utf-8-validate
 
-  '@savvy-web/silk-effects@3.3.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)':
+  '@savvy-web/silk-effects@3.3.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)':
     dependencies:
       '@changesets/apply-release-plan': 8.0.0-next.7
       '@changesets/config': 4.0.0-next.6
@@ -4569,16 +4569,16 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@savvy-web/silk@2.4.1(@changesets/cli@3.0.0-next.8)(@commitlint/cli@21.2.1(@types/node@26.1.1)(conventional-commits-parser@7.1.0)(typescript@7.0.2))(@commitlint/config-conventional@21.2.0)(@types/node@26.1.1)(husky@9.1.7)(lint-staged@17.0.8)(markdownlint-cli2-formatter-codequality@0.0.7(markdownlint-cli2@0.23.0))(markdownlint-cli2@0.23.0)(turbo@2.10.4)(typescript@7.0.2)':
+  '@savvy-web/silk@2.4.2(@changesets/cli@3.0.0-next.8)(@commitlint/cli@21.2.1(@types/node@26.1.1)(conventional-commits-parser@7.1.0)(typescript@7.0.2))(@commitlint/config-conventional@21.2.0)(@types/node@26.1.1)(husky@9.1.7)(lint-staged@17.0.8)(markdownlint-cli2-formatter-codequality@0.0.7(markdownlint-cli2@0.23.0))(markdownlint-cli2@0.23.0)(turbo@2.10.4)(typescript@7.0.2)':
     dependencies:
       '@changesets/cli': 3.0.0-next.8
       '@commitlint/cli': 21.2.1(@types/node@26.1.1)(conventional-commits-parser@7.1.0)(typescript@7.0.2)
       '@commitlint/config-conventional': 21.2.0
       '@effect/platform': 0.96.2(effect@3.21.4)
       '@savvy-web/changelog': 0.1.1
-      '@savvy-web/cli': 1.6.0
-      '@savvy-web/mcp': 1.8.0
-      '@savvy-web/silk-effects': 3.3.0(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)
+      '@savvy-web/cli': 1.6.1
+      '@savvy-web/mcp': 1.8.1
+      '@savvy-web/silk-effects': 3.3.1(@effect/platform@0.96.2(effect@3.21.4))(effect@3.21.4)
       '@types/node': 26.1.1
       effect: 3.21.4
       husky: 9.1.7
