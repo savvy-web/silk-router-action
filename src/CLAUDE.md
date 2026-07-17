@@ -19,7 +19,7 @@ The source tree follows an Effect-based layered architecture using `@savvy-web/g
 - **`main.ts`** — Entry point. Calls `Action.run(program, { layer: MainLive })`. Do not add logic here.
 - **`program.ts`** — Top-level Effect pipeline. Reads Config inputs, yields services, calls each step inside `Step.groupStep`, and sets all outputs. Covered by `program.test.ts`.
 - **`program.test.ts`** — Integration test for the full pipeline; exercises all 10 outputs using `ActionOutputsTest` and `ActionEnvironmentTest`.
-- **`layers/app.ts`** — `MainLive` layer composition. Wires `GitHubClientLive`, `ActionOutputsLive`, `ActionEnvironmentLive`, `NodeFileSystem`, `NodeHttpClient`, and `PhaseDetectorLive`. No logic — pure layer assembly.
+- **`layers/app.ts`** — `MainLive` layer composition. Wires `GitHubClientLive`, `ActionOutputsLive`, `ActionEnvironmentLive`, `NodeFileSystem`, and `PhaseDetectorLive`. No logic — pure layer assembly. (Under `@savvy-web/github-action-effects` v3 / Effect v4, `GitHubClientLive.fromEnv()` builds its own transport, so no `NodeHttpClient` layer is provided.)
 - **`services/phase-detector.ts`** — `PhaseDetector` service tag + `PhaseDetectorLive` layer. Determines which workflow phase applies by inspecting the GitHub context, querying the PR-association API, and falling back to commit-message patterns.
 - **`services/phase-detector.test.ts`** — Co-located tests for `PhaseDetector`; uses `ActionEnvironmentTest.layer` and a hand-rolled `GitHubClient` mock to simulate all six phase scenarios and API-failure fallback.
 - **`services/changesets.ts`** — Pure Effect function `parseChangesets()` that reads `.changeset/*.md` files from disk via `node:fs` and returns counts, bump type, and affected packages.
@@ -64,7 +64,7 @@ const releaseBranch = yield* Config.string("release-branch").pipe(Config.withDef
 const targetBranch = yield* Config.string("target-branch").pipe(Config.withDefault("main"));
 ```
 
-`Action.run` installs a `ConfigProvider` that maps `INPUT_<NAME>` environment variables to Config keys. Using the Effect Config API means inputs are testable via `ConfigProvider.fromMap` without touching `process.env`.
+`Action.run` installs a `ConfigProvider` that maps `INPUT_<NAME>` environment variables to Config keys. Using the Effect Config API means inputs are testable via `ConfigProvider.fromUnknown({ ... })` without touching `process.env`.
 
 ## Outputs — Before and After
 
@@ -103,7 +103,7 @@ await Effect.runPromise(program.pipe(Effect.provide(layer)));
 
 After the run, assert against `state.outputs` (an array of `{ name, value }` pairs). For services that need a `GitHubClient`, provide a hand-rolled `Layer.succeed(GitHubClient, { ... })` as seen in `services/phase-detector.test.ts`. For failure-injection (simulating API errors), use `Effect.die(...)` inside the mock method.
 
-Action inputs are injected into the Config system via `Effect.withConfigProvider(ConfigProvider.fromMap(...))` — no `process.env` mutation needed.
+Action inputs are injected into the Config system via `Effect.provide(ConfigProvider.layer(ConfigProvider.fromUnknown({ ... })))` — no `process.env` mutation needed.
 
 ## Token Plumbing
 
