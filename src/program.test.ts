@@ -3,7 +3,7 @@ import * as fs from "node:fs";
 import { NodeFileSystem } from "@effect/platform-node";
 import { GitHubClient } from "@savvy-web/github-action-effects";
 import { ActionEnvironmentTest, ActionLoggerTest, ActionOutputsTest } from "@savvy-web/github-action-effects/testing";
-import { ConfigProvider, Effect, Layer, Logger } from "effect";
+import { ConfigProvider, Effect, Layer, Logger, Stream } from "effect";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { program } from "./program.js";
 import { PhaseDetectorLive } from "./services/phase-detector.js";
@@ -24,7 +24,7 @@ const makeGh = (associatedPRs: ReadonlyArray<unknown> = []) =>
 			}).pipe(Effect.map((r) => (r as { data: T }).data)) as never,
 		graphql: () => Effect.die("graphql not used"),
 		paginate: () => Effect.die("paginate not used"),
-		paginateStream: () => Effect.die("paginateStream not used"),
+		paginateStream: () => Stream.die("paginateStream not used"),
 		repo: Effect.succeed({ owner: "owner", repo: "repo" }),
 	});
 
@@ -43,12 +43,12 @@ const runProgram = (input: {
 		NodeFileSystem.layer,
 	);
 	const fullLayer = Layer.provideMerge(PhaseDetectorLive, baseLayer);
-	const configProvider = ConfigProvider.fromMap(new Map(Object.entries(input.inputs ?? {})));
+	const configProvider = ConfigProvider.fromUnknown({ ...(input.inputs ?? {}) });
 	return Effect.runPromise(
 		(program as Effect.Effect<void, never, never>).pipe(
-			Effect.withConfigProvider(configProvider),
+			Effect.provide(ConfigProvider.layer(configProvider)),
 			Effect.provide(fullLayer),
-			Effect.provide(Logger.replace(Logger.defaultLogger, Logger.none)),
+			Effect.provide(Logger.layer([])),
 		),
 	).then(() => outputsState);
 };

@@ -1,10 +1,10 @@
 // src/schemas/domain.ts
 import { Schema } from "effect";
 
-export const WorkflowPhase = Schema.Literal("branch-management", "validation", "publishing", "close-issues", "none");
+export const WorkflowPhase = Schema.Literals(["branch-management", "validation", "publishing", "close-issues", "none"]);
 export type WorkflowPhase = typeof WorkflowPhase.Type;
 
-export const BumpType = Schema.Literal("major", "minor", "patch");
+export const BumpType = Schema.Literals(["major", "minor", "patch"]);
 export type BumpType = typeof BumpType.Type;
 
 export const ChangesetRelease = Schema.Struct({

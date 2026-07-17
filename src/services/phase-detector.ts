@@ -1,6 +1,5 @@
-import { FileSystem } from "@effect/platform";
 import { ActionEnvironment, GitHubClient } from "@savvy-web/github-action-effects";
-import { Context, Effect, Layer } from "effect";
+import { Context, Effect, FileSystem, Layer } from "effect";
 import type { PhaseDetectionResult, WorkflowPhase } from "../schemas/domain.js";
 
 interface PullRequestPayload {
@@ -43,16 +42,17 @@ const detectReleaseCommitFromMessage = (
 	return { isReleaseCommit: isMergeFromReleaseBranch || isVersionCommit };
 };
 
-export class PhaseDetector extends Context.Tag("silk-router-action/PhaseDetector")<
-	PhaseDetector,
-	{
-		readonly detect: (options: {
-			readonly releaseBranch: string;
-			readonly targetBranch: string;
-			readonly releasePrefix?: string;
-		}) => Effect.Effect<PhaseDetectionResult, never>;
-	}
->() {}
+export interface PhaseDetectorShape {
+	readonly detect: (options: {
+		readonly releaseBranch: string;
+		readonly targetBranch: string;
+		readonly releasePrefix?: string;
+	}) => Effect.Effect<PhaseDetectionResult, never>;
+}
+
+export class PhaseDetector extends Context.Service<PhaseDetector, PhaseDetectorShape>()(
+	"silk-router-action/PhaseDetector",
+) {}
 
 export const PhaseDetectorLive = Layer.effect(
 	PhaseDetector,
@@ -133,7 +133,7 @@ export const PhaseDetectorLive = Layer.effect(
 											(p) => p.merged_at !== null && p.head.ref === releaseBranch && p.base.ref === targetBranch,
 										),
 									),
-									Effect.catchAllCause(() =>
+									Effect.catchCause(() =>
 										Effect.gen(function* () {
 											yield* Effect.logWarning("PR-association API failed; falling back to commit-message detection");
 											return undefined as AssociatedPR | undefined;
