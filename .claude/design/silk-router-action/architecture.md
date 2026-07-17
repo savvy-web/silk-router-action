@@ -3,8 +3,8 @@ status: current
 module: silk-router-action
 category: architecture
 created: 2026-02-07
-updated: 2026-05-28
-last-synced: 2026-05-28
+updated: 2026-07-17
+last-synced: 2026-07-17
 completeness: 92
 related:
   - silk-router-action/phase-detection.md
@@ -41,13 +41,13 @@ src/
   layers/
     app.ts                         # MainLive layer composition (pure wiring, no logic)
   services/
-    phase-detector.ts              # PhaseDetector service tag + PhaseDetectorLive layer
+    phase-detector.ts              # PhaseDetector service + PhaseDetectorLive layer
     changesets.ts                  # parseChangesets() — reads .changeset/*.md files
     summary.ts                     # writeJobSummary() — builds + writes markdown summary
   schemas/
     domain.ts                      # Effect Schema definitions for domain types
   errors/
-    errors.ts                      # Schema.TaggedError classes for all failure modes
+    errors.ts                      # Schema.TaggedErrorClass classes for all failure modes
 ```
 
 ## System architecture
@@ -71,23 +71,24 @@ Action.run(program, { layer: MainLive });
 `MainLive` is a pure Layer composition with no logic:
 
 ```typescript
-const githubClient = GitHubClientLive.fromEnv().pipe(Layer.provide(NodeHttpClient.layer));
+const githubClient = GitHubClientLive.fromEnv().pipe(Layer.orDie);
 
 export const MainLive = Layer.mergeAll(
   githubClient,
-  ActionOutputsLive,
+  ActionOutputsLive.pipe(Layer.provide(NodeFileSystem.layer)),
   ActionEnvironmentLive,
   NodeFileSystem.layer,
-  NodeHttpClient.layer,
-  PhaseDetectorLive.pipe(Layer.provide(Layer.mergeAll(ActionEnvironmentLive, githubClient))),
+  PhaseDetectorLive.pipe(Layer.provide(Layer.mergeAll(ActionEnvironmentLive, githubClient, NodeFileSystem.layer))),
 );
 ```
+
+Under `@savvy-web/github-action-effects` v3, `GitHubClientLive.fromEnv()` builds its own HTTP transport, so `MainLive` no longer provides a `NodeHttpClient` layer. It still wires `NodeFileSystem`, which backs both `$GITHUB_OUTPUT` writes and the event-payload reads that `ActionEnvironment` and `PhaseDetector` perform through the core `FileSystem` service.
 
 ### Pipeline: `src/program.ts`
 
 The pipeline follows a linear sequence wrapped in `Step.groupStep` calls:
 
-1. **Read inputs** — `Config.string("release-branch").pipe(Config.withDefault(...))` and `Config.string("target-branch").pipe(Config.withDefault(...))`
+1. **Read inputs** — `Config.string(...).pipe(Config.withDefault(...))` for `release-branch`, `target-branch` and `release-prefix`
 2. **Detect phase** — `Step.groupStep("Detect workflow phase", detector.detect(...))`
 3. **Parse changesets** — `Step.groupStep("Parse changesets", parseChangesets())`
 4. **Emit outputs** — `Step.groupStep("Emit outputs", ...)` sets all 10 action outputs via `ActionOutputs.set`
@@ -99,7 +100,7 @@ The pipeline follows a linear sequence wrapped in `Step.groupStep` calls:
 
 See `silk-router-action/phase-detection.md` for the full algorithm.
 
-The phase detection subsystem is implemented as an Effect service (`src/services/phase-detector.ts`). `PhaseDetector` is a `Context.Tag`; `PhaseDetectorLive` is the production Layer that depends on `ActionEnvironment` (for `github.ref`, `github.eventName`, `payload`) and `GitHubClient` (for the PR-association API call). Both inputs and outputs are typed. The payload is cast to a `PayloadSubset` interface that declares only the fields the service actually uses, keeping the boundary explicit.
+The phase detection subsystem is implemented as an Effect service (`src/services/phase-detector.ts`). `PhaseDetector` is a class-based `Context.Service` (exporting a `PhaseDetectorShape` interface); `PhaseDetectorLive` is the production Layer that depends on `ActionEnvironment` (for `github.ref`, `github.eventName`, `payload`), `GitHubClient` (for the PR-association API call) and the core `FileSystem` service (to read the event payload from `$GITHUB_EVENT_PATH`). Both inputs and outputs are typed. The payload is cast to a `PayloadSubset` interface that declares only the fields the service actually uses, keeping the boundary explicit.
 
 ### Subsystem: Changeset parsing
 
@@ -167,6 +168,7 @@ use outputs for conditionals
 | `token` | No | `github.token` | GitHub token for API calls |
 | `release-branch` | No | `changeset-release/main` | Release branch name |
 | `target-branch` | No | `main` | Target branch name |
+| `release-prefix` | No | `release:` | Commit-message prefix that gates release-detection retry on the target branch |
 
 ### Outputs
 

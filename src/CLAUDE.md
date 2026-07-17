@@ -12,7 +12,7 @@ The source tree follows an Effect-based layered architecture using `@savvy-web/g
 
 - Architecture and layer wiring → `@../.claude/design/silk-router-action/architecture.md` — Load when modifying `layers/app.ts`, adding services, or changing the Effect pipeline structure.
 - Phase detection algorithm → `@../.claude/design/silk-router-action/phase-detection.md` — Load when working on `services/phase-detector.ts` or adding new workflow phases.
-- Error model and effects library adoption → `@../.claude/design/silk-router-action/error-model.md` — Load when adding or changing `Schema.TaggedError` classes in `errors/errors.ts`, or when understanding why `@actions/*` packages are absent.
+- Error model and effects library adoption → `@../.claude/design/silk-router-action/error-model.md` — Load when adding or changing `Schema.TaggedErrorClass` definitions in `errors/errors.ts`, or when understanding why `@actions/*` packages are absent.
 
 ## Layout
 
@@ -20,7 +20,7 @@ The source tree follows an Effect-based layered architecture using `@savvy-web/g
 - **`program.ts`** — Top-level Effect pipeline. Reads Config inputs, yields services, calls each step inside `Step.groupStep`, and sets all outputs. Covered by `program.test.ts`.
 - **`program.test.ts`** — Integration test for the full pipeline; exercises all 10 outputs using `ActionOutputsTest` and `ActionEnvironmentTest`.
 - **`layers/app.ts`** — `MainLive` layer composition. Wires `GitHubClientLive`, `ActionOutputsLive`, `ActionEnvironmentLive`, `NodeFileSystem`, and `PhaseDetectorLive`. No logic — pure layer assembly. (Under `@savvy-web/github-action-effects` v3 / Effect v4, `GitHubClientLive.fromEnv()` builds its own transport, so no `NodeHttpClient` layer is provided.)
-- **`services/phase-detector.ts`** — `PhaseDetector` service tag + `PhaseDetectorLive` layer. Determines which workflow phase applies by inspecting the GitHub context, querying the PR-association API, and falling back to commit-message patterns.
+- **`services/phase-detector.ts`** — class-based `PhaseDetector` `Context.Service` (with an exported `PhaseDetectorShape` interface) + `PhaseDetectorLive` layer. Determines which workflow phase applies by inspecting the GitHub context, querying the PR-association API, and falling back to commit-message patterns. `FileSystem` is captured from `effect` core so `detect` stays `R = never`.
 - **`services/phase-detector.test.ts`** — Co-located tests for `PhaseDetector`; uses `ActionEnvironmentTest.layer` and a hand-rolled `GitHubClient` mock to simulate all six phase scenarios and API-failure fallback.
 - **`services/changesets.ts`** — Pure Effect function `parseChangesets()` that reads `.changeset/*.md` files from disk via `node:fs` and returns counts, bump type, and affected packages.
 - **`services/changesets.test.ts`** — Co-located tests for changeset parsing.
@@ -28,7 +28,7 @@ The source tree follows an Effect-based layered architecture using `@savvy-web/g
 - **`services/summary.test.ts`** — Co-located tests for summary rendering.
 - **`schemas/domain.ts`** — Effect Schema definitions for `WorkflowPhase`, `BumpType`, `ParsedChangeset`, and `PhaseDetectionResult`. Single source of truth for all domain types.
 - **`schemas/domain.test.ts`** — Co-located schema validation tests.
-- **`errors/errors.ts`** — `Schema.TaggedError` classes: `PhaseDetectionError`, `ChangesetParseError`, `SummaryWriteError`. Each has a computed `.message` getter. The `ActionError` union type enables exhaustive `Effect.catchTag` usage.
+- **`errors/errors.ts`** — a single `Schema.TaggedErrorClass`: `ChangesetParseError` (string fields validated via `Schema.isMinLength(1)`), with a computed `.message` getter.
 - **`errors/errors.test.ts`** — Co-located error construction/message tests.
 
 ## Step.groupStep Convention
