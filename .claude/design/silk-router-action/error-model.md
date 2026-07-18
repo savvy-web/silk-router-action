@@ -3,8 +3,8 @@ status: current
 module: silk-router-action
 category: architecture
 created: 2026-05-28
-updated: 2026-05-28
-last-synced: 2026-05-28
+updated: 2026-07-17
+last-synced: 2026-07-17
 completeness: 88
 related:
   - silk-router-action/architecture.md
@@ -15,7 +15,7 @@ dependencies: []
 
 ## Overview
 
-This doc covers two tightly coupled design decisions that were introduced together in v2: the `Schema.TaggedError` error model and the adoption of `@savvy-web/github-action-effects` as the exclusive Actions runtime abstraction layer. These decisions together are what makes the codebase testable without process environment mutations or module mocking.
+This doc covers two tightly coupled design decisions that were introduced together in v2: the tagged-error model (`Schema.TaggedErrorClass`) and the adoption of `@savvy-web/github-action-effects` as the exclusive Actions runtime abstraction layer. These decisions together are what makes the codebase testable without process environment mutations or module mocking.
 
 ## Current state
 
@@ -23,31 +23,17 @@ All error types live in `src/errors/errors.ts`. All Actions runtime access (inpu
 
 ## Error model
 
-### Schema.TaggedError classes
+### Schema.TaggedErrorClass classes
 
-Each failure mode is a `Schema.TaggedError` subclass. There are three:
-
-- `PhaseDetectionError` — phase detection failed (operation, reason, optional cause)
-- `ChangesetParseError` — a changeset file could not be parsed (file, reason, optional cause)
-- `SummaryWriteError` — the job summary could not be written (reason, optional cause)
-
-See `src/errors/errors.ts` for the exact field shapes.
+Each failure mode is a `Schema.TaggedErrorClass` subclass. See `src/errors/errors.ts` for the current set and their field shapes. Parsing is the only step that surfaces a typed domain error into a caller's error channel; phase detection and summary writing promote their failures to defects at the boundary via `Effect.orDie`, so `detect` and `writeJobSummary` carry `never` in their error channel.
 
 Each class has a computed `get message(): string` getter that formats a human-readable description from its fields. This means `error.message` works as expected anywhere a standard Error is expected, without a separate formatting step.
 
-### ActionError union
+### Why Schema.TaggedErrorClass instead of plain Error subclasses?
 
-```typescript
-export type ActionError = PhaseDetectionError | ChangesetParseError | SummaryWriteError;
-```
+`Schema.TaggedErrorClass` gives each error class a `_tag` discriminant field automatically. This is what powers `Effect.catchTag("ChangesetParseError", ...)` — the runtime dispatches on the literal string tag rather than an `instanceof` check. The result is that tagged errors survive serialization boundaries (e.g., across fiber boundaries or `Effect.runPromise` calls) and remain correctly identified even when the class prototype chain is unavailable.
 
-The union exists to make exhaustive `Effect.catchTag` handling possible. When a caller handles all members of `ActionError`, TypeScript confirms at compile time that no branch is missing.
-
-### Why Schema.TaggedError instead of plain Error subclasses?
-
-`Schema.TaggedError` gives each error class a `_tag` discriminant field automatically. This is what powers `Effect.catchTag("PhaseDetectionError", ...)` — the runtime dispatches on the literal string tag rather than an `instanceof` check. The result is that tagged errors survive serialization boundaries (e.g., across fiber boundaries or `Effect.runPromise` calls) and remain correctly identified even when the class prototype chain is unavailable.
-
-The Schema integration also means error fields are schema-validated on construction: passing a zero-length string to `reason` (declared as `Schema.String.pipe(Schema.minLength(1))`) produces a schema error rather than a silently bad error object at runtime.
+The Schema integration also means error fields are schema-validated on construction: passing a zero-length string to `reason` (declared as `Schema.String.check(Schema.isMinLength(1))`) produces a schema error rather than a silently bad error object at runtime.
 
 ## @savvy-web/github-action-effects adoption
 
@@ -80,7 +66,7 @@ The action declares a `token` input in `action.yml`. `Action.run` bridges `INPUT
 
 ### Library-routed Octokit
 
-The `GitHubClient` service exposes a `rest<T>(name, fn)` method. The caller provides a typed function `(octokit) => Promise<SomeResponse>` and receives `T` back. The library owns the Octokit instance, handles authentication and manages the HTTP client Layer (`NodeHttpClient`). This keeps all Octokit wiring out of the application code and makes the API call surface small enough to mock with a hand-rolled Layer:
+The `GitHubClient` service exposes a `rest<T>(name, fn)` method. The caller provides a typed function `(octokit) => Promise<SomeResponse>` and receives `T` back. The library owns the Octokit instance and handles authentication; under `@savvy-web/github-action-effects` v3, `GitHubClientLive.fromEnv()` builds its own HTTP transport, so the application no longer provides a `NodeHttpClient` layer. This keeps all Octokit wiring out of the application code and makes the API call surface small enough to mock with a hand-rolled Layer:
 
 ```typescript
 Layer.succeed(GitHubClient, {
@@ -91,9 +77,9 @@ Layer.succeed(GitHubClient, {
 
 ## Rationale
 
-### Why not use Effect.catchAllCause everywhere?
+### Why not swallow every error with catchCause?
 
-`Effect.catchAllCause` is used only at the API call site inside `PhaseDetector`, where losing the error is an acceptable trade-off (falling back to commit-message detection is safe). The rest of the program propagates typed errors through the `ActionError` channel so callers can handle them exhaustively. Using `catchAllCause` broadly would discard type information and make it impossible to know at compile time whether all failure modes are handled.
+`Effect.catchCause` is used only at the API call site inside `PhaseDetector`, where losing the error is an acceptable trade-off (falling back to commit-message detection is safe). Elsewhere the parsing path keeps its typed `ChangesetParseError` in the error channel so callers can handle it explicitly. Swallowing causes broadly would discard type information and make it impossible to know at compile time whether a failure mode is handled.
 
 ### Why computed message getters instead of static strings?
 

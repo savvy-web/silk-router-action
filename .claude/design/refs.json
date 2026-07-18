@@ -4,38 +4,38 @@
 		{
 			"source": "CLAUDE.md",
 			"target": ".claude/design/silk-router-action/architecture.md",
-			"hash": "b3bf580980205d385215b0cf6a330ba486eb2969debe4d2c7bc9155afac9a6ae",
-			"recordedAt": "2026-07-05"
+			"hash": "4ea44a1b982543640323a8407b51d8a6217ac4f82d9d785e9d16d2fdf562faa3",
+			"recordedAt": "2026-07-17"
 		},
 		{
 			"source": "CLAUDE.md",
 			"target": ".claude/design/silk-router-action/error-model.md",
-			"hash": "9958a1d290cc890e51111318ec212394088e9d9edaa8d4a30e7be840ae050cef",
-			"recordedAt": "2026-07-05"
+			"hash": "7f007a2e24812bb36d8dc327fa4c98bd30d0311a6f7173482353ee0a8c430c4c",
+			"recordedAt": "2026-07-17"
 		},
 		{
 			"source": "CLAUDE.md",
 			"target": ".claude/design/silk-router-action/phase-detection.md",
-			"hash": "b35b3658756f578b9ed3a10d07772fb28e696fd3a879a83c6768b9bde8aa385f",
-			"recordedAt": "2026-07-05"
+			"hash": "b01acf57161873934e1932aa8c49ffc9f91686918def2c27a6d89b8c978814aa",
+			"recordedAt": "2026-07-17"
 		},
 		{
 			"source": "src/CLAUDE.md",
 			"target": ".claude/design/silk-router-action/architecture.md",
-			"hash": "b3bf580980205d385215b0cf6a330ba486eb2969debe4d2c7bc9155afac9a6ae",
-			"recordedAt": "2026-07-05"
+			"hash": "4ea44a1b982543640323a8407b51d8a6217ac4f82d9d785e9d16d2fdf562faa3",
+			"recordedAt": "2026-07-17"
 		},
 		{
 			"source": "src/CLAUDE.md",
 			"target": ".claude/design/silk-router-action/error-model.md",
-			"hash": "9958a1d290cc890e51111318ec212394088e9d9edaa8d4a30e7be840ae050cef",
-			"recordedAt": "2026-07-05"
+			"hash": "7f007a2e24812bb36d8dc327fa4c98bd30d0311a6f7173482353ee0a8c430c4c",
+			"recordedAt": "2026-07-17"
 		},
 		{
 			"source": "src/CLAUDE.md",
 			"target": ".claude/design/silk-router-action/phase-detection.md",
-			"hash": "b35b3658756f578b9ed3a10d07772fb28e696fd3a879a83c6768b9bde8aa385f",
-			"recordedAt": "2026-07-05"
+			"hash": "b01acf57161873934e1932aa8c49ffc9f91686918def2c27a6d89b8c978814aa",
+			"recordedAt": "2026-07-17"
 		}
 	]
 }

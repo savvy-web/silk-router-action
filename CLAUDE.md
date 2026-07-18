@@ -88,26 +88,26 @@ Load when working on phase detection logic, adding new phases, or debugging inco
 **For error model and `@savvy-web/github-action-effects` adoption rationale:**
 → `@./.claude/design/silk-router-action/error-model.md`
 
-Load when adding new error types, modifying `Schema.TaggedError` classes, or understanding why `@actions/*` packages are absent.
+Load when adding new error types, modifying `Schema.TaggedErrorClass` definitions, or understanding why `@actions/*` packages are absent.
 
 - `src/main.ts` — 4-line entry: `Action.run(program, { layer: MainLive })`.
 - `src/program.ts` — main Effect program.
 - `src/layers/app.ts` — `MainLive` composition.
 - `src/schemas/domain.ts` — `WorkflowPhase`, `BumpType`, `ChangesetRelease`, `ParsedChangeset`, `PhaseDetectionResult` schemas.
-- `src/errors/errors.ts` — `Schema.TaggedError` types + `ActionError` union.
-- `src/services/phase-detector.ts` — `Context.Tag` service for phase detection.
+- `src/errors/errors.ts` — single `ChangesetParseError` (`Schema.TaggedErrorClass`) with a computed `.message` getter.
+- `src/services/phase-detector.ts` — class-based `PhaseDetector` `Context.Service` (exports `PhaseDetectorShape`) for phase detection.
 - `src/services/changesets.ts` — Effect-wrapped changeset parser.
 - `src/services/summary.ts` — markdown job-summary builder using `GithubMarkdown.*`.
 - Tests are co-located: `src/services/foo.ts` next to `src/services/foo.test.ts`. No `__tests__/` directory.
 
 ## Technical Stack
 
-- **Effect** for typed errors, dependency injection, and service composition.
-- **`@savvy-web/github-action-effects` ^2.3.5** — provides `Step.groupStep` for buffered logging, `GithubMarkdown.*` for summary helpers, `ActionInput.*` for typed input parsing, library `<Service>Test` test layers (via `@savvy-web/github-action-effects/testing`).
-- **`@savvy-web/github-action-builder` ^1.1.0** (rsbuild-based) configured via `action.config.ts`.
-- **`@effect/platform`, `@effect/platform-node`** at catalog:silk.
-- **`@savvy-web/silk` ^2.0.0** release toolchain (silk-effects 3.0.0, changesets v3 engine); `@changesets/cli` ^3.0.0-next.8 is a direct devDependency to satisfy silk's peer range.
-- **pnpm 11.9.0**, **Node 26.4.0** (`devEngines.runtime`); the action itself bundles to `runs.using: node24` (the latest supported by GitHub Actions runners today).
+- **Effect v4** (`effect@4.0.0-beta.98`, `catalog:effect`) for typed errors, dependency injection, and service composition.
+- **`@savvy-web/github-action-effects` ^3.0.0** — provides `Step.groupStep` for buffered logging, `GithubMarkdown.*` for summary helpers, `ActionInput.*` for typed input parsing, library `<Service>Test` test layers (via `@savvy-web/github-action-effects/testing`).
+- **`@savvy-web/github-action-builder` ^2.0.0** (rsbuild-based) configured via `action.config.ts`.
+- **`@effect/platform-node`** at catalog:effect (provides `NodeFileSystem`); `@effect/platform` is gone — dissolved into `effect` core (so `FileSystem` now imports from `effect`).
+- **`@savvy-web/silk` ^3.0.0** release toolchain (changesets v3 engine).
+- **pnpm 11.13.0**, **Node 26.5.0** (`devEngines.runtime`); the action itself bundles to `runs.using: node24` (the latest supported by GitHub Actions runners today).
 - **Biome 2.5.1** with strict rules.
 - **Vitest** with Effect test layers.
 - **Type checking:** TypeScript Native Preview (`tsgo --noEmit`).

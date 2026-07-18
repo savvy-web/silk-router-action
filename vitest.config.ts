@@ -1,3 +1,4 @@
+//
 import { AgentPlugin } from "@vitest-agent/plugin";
 import { defineConfig } from "vitest/config";
 

@@ -3,8 +3,8 @@ status: current
 module: silk-router-action
 category: architecture
 created: 2026-02-07
-updated: 2026-05-28
-last-synced: 2026-05-28
+updated: 2026-07-17
+last-synced: 2026-07-17
 completeness: 92
 related:
   - silk-router-action/architecture.md
@@ -16,16 +16,18 @@ dependencies: []
 
 ## Overview
 
-The phase detection algorithm is the core logic of the silk-router-action. It examines the GitHub Actions event context (branch, commit, PR state) and determines which of five workflow phases should execute. The algorithm is implemented as an Effect service (`PhaseDetector`) that depends on `ActionEnvironment` for context reads and `GitHubClient` for the PR-association API call. A commit-message fallback is used when the API is unavailable.
+The phase detection algorithm is the core logic of the silk-router-action. It examines the GitHub Actions event context (branch, commit, PR state) and determines which of five workflow phases should execute. The algorithm is implemented as an Effect service (`PhaseDetector`, a class-based `Context.Service`) that depends on `ActionEnvironment` for context reads, `GitHubClient` for the PR-association API call and the core `FileSystem` service to read the event payload. A commit-message fallback is used when the API is unavailable.
 
 ## Current state
 
-The algorithm is implemented in `src/services/phase-detector.ts` as the `PhaseDetectorLive` Layer. The service exposes a single method:
+The algorithm is implemented in `src/services/phase-detector.ts` as the `PhaseDetectorLive` Layer. The service (shape exported as `PhaseDetectorShape`) exposes a single method:
 
 ```typescript
-PhaseDetector.detect({ releaseBranch, targetBranch })
-  => Effect.Effect<PhaseDetectionResult, PhaseDetectionError>
+PhaseDetector.detect({ releaseBranch, targetBranch, releasePrefix })
+  => Effect.Effect<PhaseDetectionResult, never>
 ```
+
+The error channel is `never`: any failure inside `detect` (context reads, the API call, payload parsing) is promoted to a defect at the boundary rather than surfaced as a typed domain error.
 
 The implementation is well-tested in `src/services/phase-detector.test.ts`, which covers all phase transitions and edge cases using `ActionEnvironmentTest.layer` and a hand-rolled `GitHubClient` mock.
 
@@ -129,7 +131,7 @@ yield* gh.rest<ReadonlyArray<AssociatedPR>>(
 )
 ```
 
-`GitHubClient.rest` routes the call through the library's authenticated Octokit instance. The caller receives typed data; the library owns the HTTP machinery. If the call fails, `Effect.catchAllCause` swallows the error, logs a warning and returns an empty array so the fallback strategy runs.
+`GitHubClient.rest` routes the call through the library's authenticated Octokit instance. The caller receives typed data; the library owns the HTTP machinery. If the call fails, `Effect.catchCause` swallows the cause, logs a warning and yields no match so the fallback strategy runs.
 
 It then searches the returned PRs for one that:
 

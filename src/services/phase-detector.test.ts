@@ -1,7 +1,8 @@
 import { NodeFileSystem } from "@effect/platform-node";
 import { GitHubClient } from "@savvy-web/github-action-effects";
 import { ActionEnvironmentTest } from "@savvy-web/github-action-effects/testing";
-import { Effect, Fiber, Layer, TestClock, TestContext } from "effect";
+import { Effect, Fiber, Layer, Stream } from "effect";
+import { TestClock } from "effect/testing";
 import { describe, expect, it } from "vitest";
 import { PhaseDetector, PhaseDetectorLive } from "./phase-detector.js";
 
@@ -21,7 +22,7 @@ const makeGhClient = (associatedPRs: ReadonlyArray<unknown> = []) =>
 			}).pipe(Effect.map((response) => response.data)) as never,
 		graphql: () => Effect.die("graphql not used in phase-detector tests"),
 		paginate: () => Effect.die("paginate not used in phase-detector tests"),
-		paginateStream: () => Effect.die("paginateStream not used in phase-detector tests"),
+		paginateStream: () => Stream.die("paginateStream not used in phase-detector tests"),
 		repo: Effect.succeed({ owner: "owner", repo: "repo" }),
 	});
 
@@ -131,7 +132,7 @@ describe("PhaseDetector", () => {
 			rest: () => Effect.die("api down") as never,
 			graphql: () => Effect.die("api down"),
 			paginate: () => Effect.die("api down"),
-			paginateStream: () => Effect.die("api down"),
+			paginateStream: () => Stream.die("api down"),
 			repo: Effect.succeed({ owner: "owner", repo: "repo" }),
 		});
 		const result = await Effect.runPromise(
@@ -304,7 +305,7 @@ describe("PhaseDetector", () => {
 			rest: () => Effect.die("API Error") as never,
 			graphql: () => Effect.die("API Error"),
 			paginate: () => Effect.die("API Error"),
-			paginateStream: () => Effect.die("API Error"),
+			paginateStream: () => Stream.die("API Error"),
 			repo: Effect.succeed({ owner: "test-owner", repo: "test-repo" }),
 		});
 		const result = await Effect.runPromise(
@@ -342,7 +343,7 @@ describe("PhaseDetector", () => {
 			rest: () => Effect.die("API Error") as never,
 			graphql: () => Effect.die("API Error"),
 			paginate: () => Effect.die("API Error"),
-			paginateStream: () => Effect.die("API Error"),
+			paginateStream: () => Stream.die("API Error"),
 			repo: Effect.succeed({ owner: "test-owner", repo: "test-repo" }),
 		});
 		const result = await Effect.runPromise(
@@ -505,7 +506,7 @@ describe("PhaseDetector", () => {
 			}) as never,
 			graphql: () => Effect.die("graphql unused"),
 			paginate: () => Effect.die("paginate unused"),
-			paginateStream: () => Effect.die("paginateStream unused"),
+			paginateStream: () => Stream.die("paginateStream unused"),
 			repo: Effect.succeed({ owner: "owner", repo: "repo" }),
 		});
 
@@ -531,12 +532,12 @@ describe("PhaseDetector", () => {
 		const counter = { calls: 0 };
 		const result = await Effect.runPromise(
 			Effect.gen(function* () {
-				const fiber = yield* Effect.fork(
+				const fiber = yield* Effect.forkChild(
 					detectWithPrefix(makeCountingGh(3, counter), "release: 1.2.3 (#42)", "release:"),
 				);
 				yield* TestClock.adjust("30 seconds");
 				return yield* Fiber.join(fiber);
-			}).pipe(Effect.provide(TestContext.TestContext)),
+			}).pipe(Effect.provide(TestClock.layer())),
 		);
 		expect(result.phase).toBe("publishing");
 		expect(result.isReleaseCommit).toBe(true);
@@ -549,12 +550,12 @@ describe("PhaseDetector", () => {
 		const result = await Effect.runPromise(
 			Effect.gen(function* () {
 				// emptyUntil=99 → always empty
-				const fiber = yield* Effect.fork(
+				const fiber = yield* Effect.forkChild(
 					detectWithPrefix(makeCountingGh(99, counter), "release: 9.9.9 (#7)", "release:"),
 				);
 				yield* TestClock.adjust("40 seconds");
 				return yield* Fiber.join(fiber);
-			}).pipe(Effect.provide(TestContext.TestContext)),
+			}).pipe(Effect.provide(TestClock.layer())),
 		);
 		expect(result.phase).toBe("branch-management");
 		expect(result.isReleaseCommit).toBe(false);
@@ -597,15 +598,15 @@ describe("PhaseDetector", () => {
 			}) as never,
 			graphql: () => Effect.die("graphql unused"),
 			paginate: () => Effect.die("paginate unused"),
-			paginateStream: () => Effect.die("paginateStream unused"),
+			paginateStream: () => Stream.die("paginateStream unused"),
 			repo: Effect.succeed({ owner: "owner", repo: "repo" }),
 		});
 		const result = await Effect.runPromise(
 			Effect.gen(function* () {
-				const fiber = yield* Effect.fork(detectWithPrefix(failingCountingGh, "release: 9.9.9 (#7)", "release:"));
+				const fiber = yield* Effect.forkChild(detectWithPrefix(failingCountingGh, "release: 9.9.9 (#7)", "release:"));
 				yield* TestClock.adjust("40 seconds");
 				return yield* Fiber.join(fiber);
-			}).pipe(Effect.provide(TestContext.TestContext)),
+			}).pipe(Effect.provide(TestClock.layer())),
 		);
 		expect(result.phase).toBe("branch-management");
 		expect(result.isReleaseCommit).toBe(false);
