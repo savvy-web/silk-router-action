@@ -1,5 +1,19 @@
 # @savvy-web/workflow-control-action
 
+## 1.2.2
+
+### Dependencies
+
+* | Dependency                       | Type       | Action  | From          | To             |                                                                              |
+  | -------------------------------- | ---------- | ------- | ------------- | -------------- | ---------------------------------------------------------------------------- |
+  | @effect/platform-node            | dependency | updated | 4.0.0-beta.99 | 4.0.0-beta.101 |                                                                              |
+  | @savvy-web/github-action-effects | dependency | updated | ^3.0.4        | ^3.0.5         |                                                                              |
+  | effect                           | dependency | updated | 4.0.0-beta.99 | 4.0.0-beta.101 | [#154][#154] Thanks [@savvy-web-bot](https://github.com/apps/savvy-web-bot)! |
+
+### Patch Changes
+
+[#154]: https://github.com/savvy-web/silk-router-action/pull/154
+
 ## 1.2.1
 
 ### Dependencies
