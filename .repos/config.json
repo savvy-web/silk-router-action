@@ -1,16 +1,5 @@
 {
 	"repos": {
-		"effect-smol": {
-			"url": "https://github.com/Effect-TS/effect-smol.git",
-			"ref": "effect@4.0.0-beta.98",
-			"purpose": "Read-only Effect v4 source pinned to the tag matching the effect catalog — the authority on what v4 actually exports, plus the v3→v4 migration notes.",
-			"sparse": [
-				"packages/effect",
-				"migration",
-				"MIGRATION.md",
-				"LLMS.md"
-			]
-		},
 		"effect": {
 			"url": "https://github.com/Effect-TS/effect.git",
 			"ref": "effect@4.0.0-beta.101",
@@ -36,8 +25,8 @@
 		},
 		"effected": {
 			"url": "https://github.com/spencerbeggs/effected.git",
-			"ref": "959a0eba4f80a037e9a113f2cf9c1d5a0209a796",
-			"purpose": "Read-only source for the @effected package kit (25 Effect v4 packages: github-actions, github, commands, npm, sbom, format parsers, workspace/git introspection, and more), pinned to main HEAD rather than a release tag because the kit is actively dogfooded and this repo consumes in-progress APIs. The authority on what each package actually exports and how its services and test doubles are shaped — read it before re-implementing a capability the kit already ships.",
+			"ref": "@effected/github-actions@0.5.0",
+			"purpose": "Read-only source for the @effected package kit (github-actions, github, commands, npm, sbom, format parsers, workspace/git introspection, and more), pinned to the release tag matching the installed @effected/github-actions. The authority on what each package actually exports and how its services and test doubles are shaped — read it before re-implementing a capability the kit already ships. Re-pin whenever the installed version moves; a tag is a monorepo-wide release commit, so @effected/github-actions@X and @effected/app@Y at the same wave resolve to the same commit.",
 			"sparse": [
 				"packages",
 				"design",
