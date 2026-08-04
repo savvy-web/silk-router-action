@@ -1,49 +1,73 @@
-// src/program.ts
-import { ActionOutputs, Step } from "@savvy-web/github-action-effects";
-import { Config, Effect } from "effect";
-import { parseChangesets } from "./services/changesets.js";
-import { PhaseDetector } from "./services/phase-detector.js";
-import { writeJobSummary } from "./services/summary.js";
+import type { ActionOutputError, ActionOutputs } from "@effected/github-actions";
+import { ActionLogger } from "@effected/github-actions";
+import type { Config, FileSystem } from "effect";
+import { Effect } from "effect";
+import { readInputs } from "./schema/inputs.js";
+import { DISABLED_OUTPUTS, emitOutputs, foldOutputs } from "./schema/outputs.js";
+import type { DetectPhaseRequirements } from "./steps/detect-phase.js";
+import { detectPhase } from "./steps/detect-phase.js";
+import type { ChangesetParseError } from "./steps/parse-changesets.js";
+import { parseChangesets } from "./steps/parse-changesets.js";
+import { writeSummary } from "./steps/write-summary.js";
 
-/* v8 ignore start -- orchestration; sub-effects are individually tested */
+/**
+ * Run one step in the log shape the legacy toolkit's `groupStep` produced.
+ *
+ * @remarks
+ * A collapsible block **and** discard-on-success buffering, with one info line
+ * on success — the shape the legacy `groupStep` produced, which was
+ * `ActionLogger.group` + `withStep`.
+ *
+ * `withStep` landed in `@effected/github-actions@0.5.0`, so this is now the
+ * legacy composition verbatim rather than an approximation of it. The port
+ * initially shipped `group` + `withBuffer`, which reproduced the block and the
+ * buffering but dropped the per-step success line.
+ *
+ * Neither `withBuffer` nor `withStep` buffers warnings or errors, so a long step
+ * still reports trouble while it is running.
+ *
+ * @internal
+ */
+const step = <A, E, R>(name: string, effect: Effect.Effect<A, E, R>): Effect.Effect<A, E, R | ActionLogger> =>
+	Effect.gen(function* () {
+		const logger = yield* ActionLogger;
+		return yield* logger.group(name, logger.withStep(name, effect));
+	});
 
-export const program = Effect.gen(function* () {
-	const releaseBranch = yield* Config.string("release-branch").pipe(Config.withDefault("changeset-release/main"));
-	const targetBranch = yield* Config.string("target-branch").pipe(Config.withDefault("main"));
-	const releasePrefix = yield* Config.string("release-prefix").pipe(Config.withDefault("release:"));
+/**
+ * The action.
+ *
+ * @remarks
+ * Pure composition: read inputs, run the steps in order, fold their results into
+ * the output contract, report. No I/O of its own, no formatting, no step bodies —
+ * a step's logic lives in `steps/`, a rendered string lives in `format.ts`.
+ *
+ * @public
+ */
+export const program: Effect.Effect<
+	void,
+	ActionOutputError | ChangesetParseError | Config.ConfigError,
+	ActionLogger | ActionOutputs | FileSystem.FileSystem | DetectPhaseRequirements
+> = Effect.gen(function* () {
+	const inputs = yield* readInputs;
 
-	const outputs = yield* ActionOutputs;
-	const detector = yield* PhaseDetector;
+	const phase = yield* step("Detect workflow phase", detectPhase({ inputs }));
+	const changesets = yield* step("Parse changesets", parseChangesets());
 
-	const phase = yield* Step.groupStep(
-		"Detect workflow phase",
-		detector.detect({ releaseBranch, targetBranch, releasePrefix }),
-	);
-	const changesets = yield* Step.groupStep("Parse changesets", parseChangesets());
-
-	yield* Step.groupStep(
-		"Emit outputs",
-		Effect.gen(function* () {
-			yield* outputs.set("phase", phase.phase);
-			yield* outputs.set("has_changesets", changesets.hasChangesets ? "true" : "false");
-			yield* outputs.set("changeset_count", String(changesets.changesetCount));
-			yield* outputs.set("release_type", changesets.releaseType ?? "");
-			yield* outputs.set("is_release_commit", phase.isReleaseCommit ? "true" : "false");
-			yield* outputs.set("is_release_branch", phase.isReleaseBranch ? "true" : "false");
-			yield* outputs.set("is_main_branch", phase.isMainBranch ? "true" : "false");
-			yield* outputs.set(
-				"merged_pr_number",
-				phase.mergedReleasePRNumber !== undefined ? String(phase.mergedReleasePRNumber) : "",
-			);
-			yield* outputs.set("should_continue", phase.phase !== "none" ? "true" : "false");
-			yield* outputs.set("reason", phase.reason);
-		}),
-	);
-
-	yield* Step.groupStep(
-		"Write job summary",
-		writeJobSummary({ phase, changesets, inputs: { releaseBranch, targetBranch } }),
-	);
-});
-
-/* v8 ignore stop */
+	yield* step("Emit outputs", emitOutputs(foldOutputs({ phase, changesets })));
+	yield* step("Write job summary", writeSummary({ phase, changesets, inputs }));
+}).pipe(
+	// Publish the all-disabled contract on any failure path.
+	//
+	// A deliberate departure from the pre-port program, which emitted nothing
+	// when it failed — and therefore belongs in the changeset. This action exists
+	// solely to gate other workflows, so a failed run that publishes nothing
+	// leaves a consumer's `if: … should_continue == 'true'` reading an empty
+	// string instead of an explicit `"false"`. Emitting the disabled contract
+	// makes a failed run say "do not proceed" rather than say nothing.
+	//
+	// `Effect.ignore` because this is a last-ditch write on a path that is
+	// already failing: the original cause must reach `Action.run`, not be
+	// replaced by an output-write error.
+	Effect.onError(() => emitOutputs(DISABLED_OUTPUTS).pipe(Effect.ignore)),
+);

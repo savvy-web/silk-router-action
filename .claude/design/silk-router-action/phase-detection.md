@@ -3,8 +3,8 @@ status: current
 module: silk-router-action
 category: architecture
 created: 2026-02-07
-updated: 2026-07-17
-last-synced: 2026-07-17
+updated: 2026-08-04
+last-synced: 2026-08-04
 completeness: 92
 related:
   - silk-router-action/architecture.md
@@ -16,20 +16,20 @@ dependencies: []
 
 ## Overview
 
-The phase detection algorithm is the core logic of the silk-router-action. It examines the GitHub Actions event context (branch, commit, PR state) and determines which of five workflow phases should execute. The algorithm is implemented as an Effect service (`PhaseDetector`, a class-based `Context.Service`) that depends on `ActionEnvironment` for context reads, `GitHubClient` for the PR-association API call and the core `FileSystem` service to read the event payload. A commit-message fallback is used when the API is unavailable.
+The phase detection algorithm is the core logic of the silk-router-action. It examines the GitHub Actions event context (branch, commit, PR state) and determines which of five workflow phases should execute. It is a **pipeline step**, not a service — used exactly once, so it stays in `steps/` rather than being promoted to `services/`. It requires `ActionEnvironment` for context and payload reads, and `PullRequest` plus `Repo` for the PR-association query. A commit-message fallback runs when the API cannot answer.
 
 ## Current state
 
-The algorithm is implemented in `src/services/phase-detector.ts` as the `PhaseDetectorLive` Layer. The service (shape exported as `PhaseDetectorShape`) exposes a single method:
+The algorithm is implemented in `src/steps/detect-phase.ts` as a single exported function:
 
 ```typescript
-PhaseDetector.detect({ releaseBranch, targetBranch, releasePrefix })
+detectPhase({ inputs })  // inputs: { releaseBranch, targetBranch, releasePrefix }
   => Effect.Effect<PhaseDetectionResult, never>
 ```
 
 The error channel is `never`: any failure inside `detect` (context reads, the API call, payload parsing) is promoted to a defect at the boundary rather than surfaced as a typed domain error.
 
-The implementation is well-tested in `src/services/phase-detector.test.ts`, which covers all phase transitions and edge cases using `ActionEnvironmentTest.layer` and a hand-rolled `GitHubClient` mock.
+The implementation is covered by `__test__/unit/steps/detect-phase.test.ts`, which exercises all phase transitions and edge cases using `actionEnvironmentTest` (a payload-serving double) and `PullRequest.layerTest`. Every case runs under a virtual clock so a stray retry surfaces as a wrong call count rather than a test timeout.
 
 ### Workflow phases
 
@@ -115,31 +115,40 @@ Is this a pull_request event?
 
 The most complex part of the algorithm is determining whether a push to main is a release commit (i.e., came from a merged release PR). Two strategies are used in sequence.
 
-### Primary strategy: GitHubClient API
+### Primary strategy: the PR-association query
 
-The service calls `GitHubClient.rest` to query the PR-association endpoint:
+The step calls the resource method by the question it answers:
 
 ```typescript
-yield* gh.rest<ReadonlyArray<AssociatedPR>>(
-  "listPullRequestsAssociatedWithCommit",
-  async (octokit) =>
-    octokit.rest.repos.listPullRequestsAssociatedWithCommit({
-      owner: ghRepo.owner,
-      repo: ghRepo.repo,
-      commit_sha: github.sha,
-    }),
-)
+yield* pullRequests.listAssociatedWithCommit(github.sha)
 ```
 
-`GitHubClient.rest` routes the call through the library's authenticated Octokit instance. The caller receives typed data; the library owns the HTTP machinery. If the call fails, `Effect.catchCause` swallows the cause, logs a warning and yields no match so the fallback strategy runs.
+The route literal never appears in this repository — `@effected/github` owns it,
+and types both parameters and response from it. `Repo` arrives through the
+method's own requirement channel and is resolved **per call**, never captured.
 
-It then searches the returned PRs for one that:
+The call **paginates**, which the pre-port implementation did not: a commit with
+more than 30 associated pull requests previously truncated silently.
 
-1. Has `merged_at !== null` (PR was merged, not closed)
-2. Has `head.ref === releaseBranch` (came from the release branch)
-3. Has `base.ref === targetBranch` (targeted the main branch)
+It then searches the returned pull requests for one that:
 
-If found, the commit is confirmed as a release commit and the PR number is captured.
+1. Has `merged === true` (merged, not merely closed)
+2. Has `head === releaseBranch` (came from the release branch)
+3. Has `base === targetBranch` (targeted the main branch)
+
+Note the shape: `PullRequestInfo` flattens `head` and `base` to **branch-name
+strings**, and reports merge state as a boolean alongside an
+`Option`-typed `mergedAt` — not octokit's nested `{ ref }` and nullable
+`merged_at`.
+
+If found, the commit is confirmed as a release commit and the PR number captured.
+
+**On failure, degradation is narrow.** Five `GitHubError` kinds — `transport`,
+`rateLimited`, `notFound`, `rejected`, `unauthorized` — log a warning and yield no
+match, so the fallback runs. `decode` and `alreadyExists` are **not** caught and
+surface as defects. The pre-port implementation used `Effect.catchCause` and
+absorbed everything, including a malformed response; see `error-model.md` for why
+that changed.
 
 ### Fallback strategy: Commit message patterns
 
@@ -179,7 +188,9 @@ When GitHub merges a release PR, the push event to the target branch can arrive 
 
 To avoid retrying on every push to main, the algorithm first checks whether the head commit message starts with the `release-prefix` input value (default `"release:"`). Only when this prefix matches does it enter the retry loop.
 
-**Empty-prefix guard:** If `release-prefix` is set to the empty string `""`, then `"".startsWith("")` evaluates to `true` for every commit message, which would retry every single push to main regardless of content. To prevent this, the retry is skipped when `releasePrefix` is an empty string (`Boolean(releasePrefix) && commitMessage.startsWith(releasePrefix)`). Consumers should not set the input to `""`.
+**Empty prefix disables the retry — deliberately, and it is a supported setting.** Without a guard, `"".startsWith("")` is `true` for every message, so an empty prefix would retry every push to the target branch. The guard turns that into the opposite and documented behavior: `release-prefix: ""` switches the retry off.
+
+⚠️ **This depends on an unverified premise.** The runner publishes `action.yml`'s default for an *unsupplied* input, so the variable is only ever empty when a caller writes `release-prefix: ""` explicitly — which is what makes the two cases distinguishable. `readInputs` therefore reads this one input through `Config.option` rather than `Config.withDefault`, since the latter collapses an explicit empty back to the default. **Whether GitHub really publishes an empty variable for an explicitly-empty `with:` value has not been confirmed on a real runner, and no local test can confirm it.** The discharge procedure is recorded in the TSDoc at the `releasePrefixConfig` call site in `src/schema/inputs.ts`.
 
 ### Retry loop (push-to-main path only)
 
@@ -187,8 +198,10 @@ The retry applies exclusively to the push-to-main code path (the release-commit 
 
 - **Retry budget:** `RELEASE_DETECT_ATTEMPTS = 3` retries after the initial lookup — up to **4 lookups total**
 - **Delay between lookups:** 10 seconds (`RELEASE_DETECT_DELAY = "10 seconds"`)
-- **Early stop:** as soon as any lookup returns a confirmed release commit, the loop exits and routes to `publishing`
-- **Constants:** `RELEASE_DETECT_ATTEMPTS` and `RELEASE_DETECT_DELAY` are defined once in `phase-detector.ts`
+- **Early stop:** as soon as a lookup returns a confirmed release commit, the retry stops and routes to `publishing`
+- **Constants:** both are defined once in `detect-phase.ts`
+
+**Mechanism.** The retry is `Effect.retry` on `Schedule.spaced`, not a hand-rolled loop. Because retry acts on the error channel and cannot see an empty success, "not visible yet" is modelled as an internal tagged failure (`ReleasePRNotVisibleYet`) that is caught at the boundary and converted back to "no match". It never widens `detectPhase`'s error channel, which stays `never`, and it is deliberately not a `GitHubError` — putting it in the degrade predicate would short-circuit the retry it exists to drive.
 
 ### API remains authoritative
 
@@ -282,4 +295,4 @@ These phases need different workflow triggers. Publishing runs on a `push` event
 ## Related documentation
 
 - Overall action architecture: `silk-router-action/architecture.md`
-- Test coverage: `src/services/phase-detector.test.ts`
+- Test coverage: `__test__/unit/steps/detect-phase.test.ts`

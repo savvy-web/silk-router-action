@@ -3,8 +3,8 @@ status: current
 module: silk-router-action
 category: architecture
 created: 2026-02-07
-updated: 2026-07-17
-last-synced: 2026-07-17
+updated: 2026-08-04
+last-synced: 2026-08-04
 completeness: 92
 related:
   - silk-router-action/phase-detection.md
@@ -18,17 +18,17 @@ dependencies: []
 
 The silk-router-action is a lightweight GitHub Action that performs pre-flight checks to determine which release workflow phase should execute. It replaces a monolithic release workflow with targeted workflows that only run when needed, reducing CI/CD resource usage and improving clarity.
 
-The action is built on an Effect-based layered architecture. All GitHub Actions runtime abstractions (inputs, outputs, environment context and the Octokit HTTP client) are provided by `@savvy-web/github-action-effects` services rather than direct `@actions/*` imports. `src/main.ts` is a four-line entry point that hands `program` to `Action.run`. `program.ts` is the Effect pipeline that does all real work.
+The action is built on an Effect-based layered architecture. GitHub Actions runtime abstractions (inputs, outputs, environment context, logging) come from `@effected/github-actions`; the GitHub API comes from `@effected/github`. No `@actions/*` package is imported anywhere. `src/main.ts` is an entry point guarded on `GITHUB_ACTIONS` so the module stays importable without executing the action; `program.ts` is pure composition over one module per pipeline step.
 
 ## Current state
 
 The action is fully implemented and production-ready with:
 
 - **Single entry point** (`src/main.ts`) — no pre/post scripts; the only lifecycle script is `main`
-- **Effect pipeline** (`src/program.ts`) — reads Config inputs, yields services, calls each step inside `Step.groupStep` and sets all outputs
+- **Effect pipeline** (`src/program.ts`) — reads inputs, runs each step inside a local `step` helper (`ActionLogger.group` wrapping `withBuffer`), folds the results into the output contract and emits it
 - **5 workflow phases** detected: `branch-management`, `validation`, `publishing`, `close-issues`, `none`
 - **10 action outputs** providing fine-grained workflow control signals
-- **Markdown job summaries** via `GithubMarkdown` helpers and `ActionOutputs.summary`
+- **Markdown job summaries** rendered by `src/format.ts` via `GitHubMarkdown` and written through `ActionOutputs.summary`
 - **rsbuild-based bundler** via `@savvy-web/github-action-builder`
 - **Fast execution** completing in under 5 seconds
 
@@ -36,15 +36,15 @@ The action is fully implemented and production-ready with:
 
 ```text
 src/
-  main.ts                          # Entry point — Action.run(program, { layer: MainLive })
+  main.ts                          # Entry point — guarded Action.run(program, { layer: AppLayer })
   program.ts                       # Top-level Effect pipeline and orchestrator
   layers/
-    app.ts                         # MainLive layer composition (pure wiring, no logic)
-  services/
-    phase-detector.ts              # PhaseDetector service + PhaseDetectorLive layer
+    app.ts                         # AppLayer composition (pure wiring, no logic)
+  steps/
+    detect-phase.ts                # phase detection, PR association, scheduled retry
     changesets.ts                  # parseChangesets() — reads .changeset/*.md files
     summary.ts                     # writeJobSummary() — builds + writes markdown summary
-  schemas/
+  schema/
     domain.ts                      # Effect Schema definitions for domain types
   errors/
     errors.ts                      # Schema.TaggedErrorClass classes for all failure modes
@@ -57,23 +57,25 @@ src/
 The entry point is intentionally minimal:
 
 ```typescript
-import { Action } from "@savvy-web/github-action-effects";
-import { MainLive } from "./layers/app.js";
+import { Action } from "@effected/github-actions";
+import { AppLayer } from "./layers/app.js";
 import { program } from "./program.js";
 
-Action.run(program, { layer: MainLive });
+if (process.env.GITHUB_ACTIONS !== undefined) {
+  await Action.run(program, { layer: AppLayer });
+}
 ```
 
 `Action.run` installs the Effect runtime, wires the ConfigProvider so `Config.string(...)` reads from `INPUT_*` environment variables and bridges the `token` action input to `GITHUB_TOKEN` before the layer starts. All error handling, process exit codes and job failure signals are managed by the library.
 
 ### Layer wiring: `src/layers/app.ts`
 
-`MainLive` is a pure Layer composition with no logic:
+`AppLayer` is a pure Layer composition with no logic, and carries **only** what `ActionRuntime.layer` does not already provide:
 
 ```typescript
 const githubClient = GitHubClientLive.fromEnv().pipe(Layer.orDie);
 
-export const MainLive = Layer.mergeAll(
+export const AppLayer = Layer.mergeAll(
   githubClient,
   ActionOutputsLive.pipe(Layer.provide(NodeFileSystem.layer)),
   ActionEnvironmentLive,
@@ -82,19 +84,21 @@ export const MainLive = Layer.mergeAll(
 );
 ```
 
-Under `@savvy-web/github-action-effects` v3, `GitHubClientLive.fromEnv()` builds its own HTTP transport, so `MainLive` no longer provides a `NodeHttpClient` layer. It still wires `NodeFileSystem`, which backs both `$GITHUB_OUTPUT` writes and the event-payload reads that `ActionEnvironment` and `PhaseDetector` perform through the core `FileSystem` service.
+`ActionRuntime.layer` composes the Node platform, an HTTP client, `ActionEnvironment`, `ActionLogger`, `ActionOutputs` and `ActionState`, so none of those appear in `AppLayer` — putting them there would be over-provision rather than wiring. `AppLayer` carries the GitHub client (authenticated from the `token` input through the runner's own `INPUT_` derivation, as a redacted value), `Repo`, and `PullRequest`.
+
+`Repo` is a **value** service resolved per call by the resource methods that need it. Capturing it at layer-construction time would make `Repo.provide` silently do nothing.
 
 ### Pipeline: `src/program.ts`
 
-The pipeline follows a linear sequence wrapped in `Step.groupStep` calls:
+The pipeline follows a linear sequence, each step wrapped by the local `step` helper:
 
 1. **Read inputs** — `Config.string(...).pipe(Config.withDefault(...))` for `release-branch`, `target-branch` and `release-prefix`
-2. **Detect phase** — `Step.groupStep("Detect workflow phase", detector.detect(...))`
-3. **Parse changesets** — `Step.groupStep("Parse changesets", parseChangesets())`
-4. **Emit outputs** — `Step.groupStep("Emit outputs", ...)` sets all 10 action outputs via `ActionOutputs.set`
-5. **Write summary** — `Step.groupStep("Write job summary", writeJobSummary(...))`
+2. **Detect phase** — `step("Detect workflow phase", detector.detect(...))`
+3. **Parse changesets** — `step("Parse changesets", parseChangesets())`
+4. **Emit outputs** — `step("Emit outputs", …)` sets all 10 action outputs via `ActionOutputs.set`
+5. **Write summary** — `step("Write job summary", writeJobSummary(...))`
 
-`Step.groupStep(title, effect)` opens a collapsible group in the Actions runner UI. Groups are collapsed on success and expanded on failure, keeping logs quiet in CI and verbose only when something goes wrong.
+`step(title, effect)` opens a collapsible group in the Actions runner UI. Groups are collapsed on success and expanded on failure, keeping logs quiet in CI and verbose only when something goes wrong.
 
 ### Subsystem: Phase detection
 
@@ -123,9 +127,11 @@ Summary of changes
 
 ### Subsystem: Logging and summaries
 
-Structured logging uses `Step.groupStep` from `@savvy-web/github-action-effects` for collapsible group blocks. Individual log lines use `Effect.logInfo`, `Effect.logWarning` and `Effect.logError` — the library routes these to the appropriate GitHub Actions runner annotations under the hood.
+Structured logging uses `program.ts`'s local `step` helper — `ActionLogger.group` wrapping `ActionLogger.withBuffer(…, { onSuccess: "discard" })` — giving a collapsible block whose verbose output is discarded on success and spilled on failure. Individual log lines use `Effect.logInfo`, `Effect.logWarning` and `Effect.logError`; `ActionLogger.layerLogger` maps them onto runner annotations.
 
-Job summaries are built in `src/services/summary.ts` using `GithubMarkdown` helpers from `@savvy-web/github-action-effects` (headings, tables) and written via `ActionOutputs.summary(markdown)`.
+The pre-port `Step.groupStep` also emitted one summary line per step on success. `ActionLogger` has no equivalent and that line is gone — an accepted, changeset-recorded loss rather than something reproduced locally.
+
+Job summaries are rendered in `src/format.ts` — the action's single rendering surface, pure and service-free — using `GitHubMarkdown` (headings, tables) and written by `steps/write-summary.ts` via `ActionOutputs.summary(markdown)`. That writer builds and serializes a real markdown tree rather than joining strings, so a `|` arriving from a branch name or PR title is escaped instead of corrupting the table.
 
 ### Error model
 
@@ -226,7 +232,9 @@ The `src/schemas/` directory contains Effect Schema definitions that are the sin
 
 ### Why Effect services instead of direct @actions/* imports?
 
-Using `@savvy-web/github-action-effects` services (`ActionEnvironment`, `ActionOutputs`, `GitHubClient`) decouples the business logic from the Actions runtime. Tests swap in `ActionEnvironmentTest.layer` and `ActionOutputsTest.layer` without touching `process.env` or mocking module imports. The production and test paths share exactly the same program code.
+Using kit services (`ActionEnvironment`, `ActionOutputs`, `ActionLogger`, `GitHubClient`, `PullRequest`, `Repo`) decouples the business logic from the Actions runtime. Tests provide doubles from `__test__/utils/doubles.ts` without touching `process.env` or mocking module imports, and the production and test paths share exactly the same program code.
+
+One sharp edge: `ActionEnvironment.layerTest` hard-provides a noop filesystem, so it cannot serve a webhook payload. Payload-driven tests compose `ActionEnvironment.makeTest` with their own stubbed `FileSystem` instead — see `__test__/CLAUDE.md`.
 
 ### Why Config API instead of core.getInput?
 
