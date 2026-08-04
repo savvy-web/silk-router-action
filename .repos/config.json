@@ -10,6 +10,51 @@
 				"MIGRATION.md",
 				"LLMS.md"
 			]
+		},
+		"effect": {
+			"url": "https://github.com/Effect-TS/effect.git",
+			"ref": "effect@4.0.0-beta.101",
+			"purpose": "Read-only Effect v4 source pinned to the tag matching the effect catalog — the authority on what v4 actually exports, plus the v3→v4 migration notes and the @effect/vitest reference implementation. Tracks the main Effect-TS/effect monorepo (v4 development moved back there on 2026-07-19 when the effect-smol repo was archived); vendored at .repos/effect since the 2026-07-24 rename, matching the path a consuming repo would use.",
+			"sparse": [
+				"packages/effect",
+				"packages/vitest",
+				"migration",
+				"ai-docs",
+				"LLMS.md",
+				"MIGRATION.md"
+			],
+			"orientation": {
+				"layout": "Sparse checkout: packages/effect (core source + package.json exports map), packages/vitest (@effect/vitest reference implementation), migration/ (per-domain v3→v4 notes), ai-docs/, LLMS.md, MIGRATION.md.",
+				"keyPaths": {
+					"effect-source": "packages/effect/src",
+					"unstable-modules": "packages/effect/src/unstable",
+					"migration-notes": "migration",
+					"vitest-reference": "packages/vitest/src"
+				},
+				"startHere": "packages/effect/src settles what v4 actually exports (evidence-ladder rung 2); migration/*.md settles v3→v4 renames (rung 1). Before trusting an answer, check the pin matches the installed effect version — node_modules wins on disagreement."
+			}
+		},
+		"effected": {
+			"url": "https://github.com/spencerbeggs/effected.git",
+			"ref": "959a0eba4f80a037e9a113f2cf9c1d5a0209a796",
+			"purpose": "Read-only source for the @effected package kit (25 Effect v4 packages: github-actions, github, commands, npm, sbom, format parsers, workspace/git introspection, and more), pinned to main HEAD rather than a release tag because the kit is actively dogfooded and this repo consumes in-progress APIs. The authority on what each package actually exports and how its services and test doubles are shaped — read it before re-implementing a capability the kit already ships.",
+			"sparse": [
+				"packages",
+				"design",
+				"CLAUDE.md",
+				"README.md"
+			],
+			"orientation": {
+				"layout": "pnpm monorepo, one directory per published package under packages/<name>/ with src/, test files co-located, and its own CLAUDE.md. design/ holds the kit's internal design docs. The website/, lib/, plugin/ and lockfile trees are excluded from the sparse checkout.",
+				"keyPaths": {
+					"packages": "packages",
+					"actions-runtime": "packages/github-actions/src",
+					"github-api": "packages/github/src",
+					"subprocesses": "packages/commands/src",
+					"design-docs": "design"
+				},
+				"startHere": "packages/<name>/src/index.ts for a package's real export surface, and its CLAUDE.md for the intended usage. Pinned to main HEAD, not a release tag — the checkout may be ahead of any published version, so node_modules settles what this repo can actually call today."
+			}
 		}
 	}
 }
