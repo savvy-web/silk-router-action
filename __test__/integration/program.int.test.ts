@@ -1,6 +1,6 @@
 import type { PullRequestInfo } from "@effected/github";
 import { PullRequest, Repo, RepoRef } from "@effected/github";
-import { ActionInput, ActionLogger } from "@effected/github-actions";
+import { ActionInput, ActionLogger, ActionOutputs } from "@effected/github-actions";
 import { Cause, ConfigProvider, DateTime, Effect, Exit, FileSystem, Layer, Option } from "effect";
 import { describe, expect, it } from "vitest";
 import { program } from "../../src/program.js";
@@ -220,6 +220,45 @@ describe("program (failure path)", () => {
 
 		expect(stepped).toEqual(["Detect workflow phase", "Parse changesets", "Emit outputs", "Write job summary"]);
 		expect(buffered).toEqual([]);
+	});
+
+	/**
+	 * The failure path's own failure mode.
+	 *
+	 * @remarks
+	 * `runFailing` uses a recording double whose `set` always succeeds, so it
+	 * cannot observe an output write that itself fails — and `Effect.ignore` on
+	 * the `onError` emission is precisely what makes that survivable. Without a
+	 * case where `set` fails, a regression that dropped the `ignore` would still
+	 * pass: the original cause would be replaced by the write error and nobody
+	 * would notice the step failure had been swallowed.
+	 */
+	it("keeps the original cause when the failure-path write also fails", async () => {
+		const exploding = ActionLogger.layerTest({
+			group: () => Effect.die("injected step failure"),
+			withStep: (_name, effect) => effect,
+			withBuffer: (_label, effect) => effect,
+		});
+		const brokenOutputs = ActionOutputs.layerTest({
+			set: () => Effect.fail(new Error("output write failed") as never),
+			summary: () => Effect.void,
+		});
+		const layer = Layer.mergeAll(
+			brokenOutputs,
+			exploding,
+			actionEnvironmentTest({ GITHUB_REF: "refs/heads/main", GITHUB_EVENT_NAME: "push" }, { head_commit: {} }),
+			PullRequest.layerTest(),
+			Repo.layer(RepoRef.make({ owner: "acme", repo: "example" })),
+			FileSystem.layerNoop({}),
+		);
+		const exit = await Effect.runPromiseExit(
+			program.pipe(Effect.provide(layer), Effect.provide(ConfigProvider.layer(ActionInput.provider({})))),
+		);
+
+		expect(Exit.isFailure(exit)).toBe(true);
+		if (Exit.isFailure(exit)) {
+			expect(Cause.pretty(exit.cause)).toContain("injected step failure");
+		}
 	});
 
 	it("emits the all-disabled contract on the failure path", async () => {

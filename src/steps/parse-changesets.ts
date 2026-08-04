@@ -84,7 +84,12 @@ const emptyResult = (): ParseChangesetsResult => ({
  * @public
  */
 export const parseChangesetFile = (content: string, id: string): ParsedChangeset | null => {
-	const frontmatterMatch = content.match(/^---\n([\s\S]*?)\n---\n?([\s\S]*)$/);
+	// Normalize line endings before matching. The delimiter expression anchors on
+	// `\n`, so a CRLF changeset would not match at all — and an unmatched file is
+	// returned as `null`, which drops its releases silently rather than failing.
+	// A Windows-authored or CRLF-normalized checkout would lose a real release.
+	const normalized = content.replace(/\r\n?/g, "\n");
+	const frontmatterMatch = normalized.match(/^---\n([\s\S]*?)\n---\n?([\s\S]*)$/);
 	if (!frontmatterMatch) return null;
 	const [, frontmatter, summary] = frontmatterMatch;
 	const releases: Array<ChangesetRelease> = [];

@@ -1,5 +1,5 @@
 import { ActionOutputs } from "@effected/github-actions";
-import { Effect, Exit } from "effect";
+import { Cause, Effect, Exit } from "effect";
 import { describe, expect, it } from "vitest";
 import type { PhaseDetectionResult } from "../../../src/schema/domain.js";
 import type { ParseChangesetsResult } from "../../../src/steps/parse-changesets.js";
@@ -102,5 +102,12 @@ describe("writeSummary", () => {
 		);
 
 		expect(Exit.isFailure(exit)).toBe(true);
+		if (Exit.isFailure(exit)) {
+			// `Exit.isFailure` alone is satisfied by a typed failure too, so it would
+			// pass against an implementation that dropped the `Effect.orDie`. The
+			// posture this step documents is fail-the-job-as-a-defect; assert the
+			// defect specifically or the test does not constrain it.
+			expect(Cause.hasDies(exit.cause)).toBe(true);
+		}
 	});
 });

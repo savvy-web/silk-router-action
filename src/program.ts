@@ -1,8 +1,12 @@
+import type { ActionOutputError, ActionOutputs } from "@effected/github-actions";
 import { ActionLogger } from "@effected/github-actions";
+import type { Config, FileSystem } from "effect";
 import { Effect } from "effect";
 import { readInputs } from "./schema/inputs.js";
 import { DISABLED_OUTPUTS, emitOutputs, foldOutputs } from "./schema/outputs.js";
+import type { DetectPhaseRequirements } from "./steps/detect-phase.js";
 import { detectPhase } from "./steps/detect-phase.js";
+import type { ChangesetParseError } from "./steps/parse-changesets.js";
 import { parseChangesets } from "./steps/parse-changesets.js";
 import { writeSummary } from "./steps/write-summary.js";
 
@@ -40,7 +44,11 @@ const step = <A, E, R>(name: string, effect: Effect.Effect<A, E, R>): Effect.Eff
  *
  * @public
  */
-export const program = Effect.gen(function* () {
+export const program: Effect.Effect<
+	void,
+	ActionOutputError | ChangesetParseError | Config.ConfigError,
+	ActionLogger | ActionOutputs | FileSystem.FileSystem | DetectPhaseRequirements
+> = Effect.gen(function* () {
 	const inputs = yield* readInputs;
 
 	const phase = yield* step("Detect workflow phase", detectPhase({ inputs }));

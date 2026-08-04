@@ -36,7 +36,7 @@ const client = GitHubClient.layerFromConfig({ name: "token" }).pipe(Layer.orDie)
  *
  * @public
  */
-export const AppLayer = Layer.mergeAll(
+export const AppLayer: Layer.Layer<GitHubClient | PullRequest | Repo> = Layer.mergeAll(
 	client,
 	Repo.layerFromConfig().pipe(Layer.orDie),
 	PullRequest.layer.pipe(Layer.provide(client)),

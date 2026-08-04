@@ -183,6 +183,41 @@ describe("detectPhase — commit-message fallback", () => {
 		expect((await fallback("Merge pull request #7 from acme/changeset-release/main")).phase).toBe("publishing");
 	});
 
+	/**
+	 * Isolates the `from <owner>/<branch>` clause, and with it the one source
+	 * substitution this port made inside the detection algorithm.
+	 *
+	 * @remarks
+	 * The legacy implementation passed `gh.repo.owner`, parsed from
+	 * `GITHUB_REPOSITORY`. This one passes `github.repositoryOwner`, which reads
+	 * `GITHUB_REPOSITORY_OWNER`. They agree on a runner, and dropping the capture
+	 * is what lets `Repo` stay resolved per call — but they are different sources,
+	 * so the substitution deserves a test that fails if the owner ever arrives
+	 * empty or wrong.
+	 *
+	 * The message matches **only** this clause: no `Merge pull request`, no
+	 * `Merge branch '…'`, no version-commit phrasing. The existing merge-commit
+	 * case above overlaps the `Merge pull request` predicate, so it would pass
+	 * whether the owner resolved correctly or not.
+	 */
+	it("matches a merge from <owner>/<release-branch> on the owner alone", async () => {
+		const result = await detect({
+			env: { ...push("refs/heads/main"), GITHUB_REPOSITORY_OWNER: "acme", GITHUB_REPOSITORY: "acme/example" },
+			payload: { head_commit: { message: "Auto-merged from acme/changeset-release/main" } },
+			fail: GitHubError.notFound("PullRequest.listAssociatedWithCommit", "commit"),
+		});
+		expect(result.phase).toBe("publishing");
+	});
+
+	it("does not match that clause when the owner differs", async () => {
+		const result = await detect({
+			env: { ...push("refs/heads/main"), GITHUB_REPOSITORY_OWNER: "other", GITHUB_REPOSITORY: "other/example" },
+			payload: { head_commit: { message: "Auto-merged from acme/changeset-release/main" } },
+			fail: GitHubError.notFound("PullRequest.listAssociatedWithCommit", "commit"),
+		});
+		expect(result.phase).toBe("branch-management");
+	});
+
 	it("leaves an ordinary commit as branch-management", async () => {
 		expect((await fallback("feat: add a thing")).phase).toBe("branch-management");
 	});
@@ -298,13 +333,7 @@ describe("detectPhase — release-prefix retry", () => {
 	it("makes exactly 4 attempts before giving up (1 initial + 3 retries)", async () => {
 		const { effect, calls } = withRetry({ attemptsBeforeSuccess: 99, message: "release: v1" });
 
-		const result = await Effect.runPromise(
-			Effect.gen(function* () {
-				const fiber = yield* Effect.forkChild(effect);
-				yield* TestClock.adjust("60 seconds");
-				return yield* Fiber.join(fiber);
-			}).pipe(Effect.provide(TestClock.layer())),
-		);
+		const result = await Effect.runPromise(underTestClock(effect));
 
 		expect(calls()).toBe(4);
 		expect(result.phase).toBe("branch-management");

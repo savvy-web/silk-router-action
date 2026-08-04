@@ -26,7 +26,7 @@
 		"effected": {
 			"url": "https://github.com/spencerbeggs/effected.git",
 			"ref": "@effected/github-actions@0.5.0",
-			"purpose": "Read-only source for the @effected package kit (github-actions, github, commands, npm, sbom, format parsers, workspace/git introspection, and more), pinned to the release tag matching the installed @effected/github-actions. The authority on what each package actually exports and how its services and test doubles are shaped — read it before re-implementing a capability the kit already ships. Re-pin whenever the installed version moves; a tag is a monorepo-wide release commit, so @effected/github-actions@X and @effected/app@Y at the same wave resolve to the same commit.",
+			"purpose": "Read-only source for the @effected package kit, pinned to the release tag matching the installed @effected/github-actions.",
 			"sparse": [
 				"packages",
 				"design",
@@ -42,7 +42,7 @@
 					"subprocesses": "packages/commands/src",
 					"design-docs": "design"
 				},
-				"startHere": "packages/<name>/src/index.ts for a package's real export surface, and its CLAUDE.md for the intended usage. Pinned to main HEAD, not a release tag — the checkout may be ahead of any published version, so node_modules settles what this repo can actually call today."
+				"startHere": "packages/<name>/src/index.ts for a package's real export surface, and its CLAUDE.md for the intended usage. Pinned to the release tag named by `ref`, so the checkout matches the published version this repo installs — re-pin whenever that version moves. A tag is a monorepo-wide release commit, so github-actions@X and app@Y from the same wave resolve to one commit. node_modules still wins on any disagreement."
 			}
 		}
 	}

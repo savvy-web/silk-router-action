@@ -10,6 +10,7 @@ import {
 	parseChangesetFile,
 	parseChangesets,
 } from "../../../src/steps/parse-changesets.js";
+import { fsWith } from "../../utils/doubles.js";
 
 /**
  * A stubbed filesystem, not a real one.
@@ -26,27 +27,6 @@ import {
  */
 const DIR = "/repo/.changeset";
 
-const fsWith = (tree: Readonly<Record<string, Readonly<Record<string, string>>>>) =>
-	FileSystem.layerNoop({
-		exists: (p: string) => Effect.succeed(Object.hasOwn(tree, p)),
-		readDirectory: (p: string) =>
-			Object.hasOwn(tree, p)
-				? Effect.succeed(Object.keys(tree[p]))
-				: Effect.fail(
-						systemError({ _tag: "NotFound", module: "FileSystem", method: "readDirectory", pathOrDescriptor: p }),
-					),
-		readFileString: (p: string) => {
-			const dir = path.dirname(p);
-			const name = path.basename(p);
-			const content = tree[dir]?.[name];
-			return content === undefined
-				? Effect.fail(
-						systemError({ _tag: "NotFound", module: "FileSystem", method: "readFileString", pathOrDescriptor: p }),
-					)
-				: Effect.succeed(content);
-		},
-	});
-
 const run = (files: Readonly<Record<string, string>>, changesetPath = DIR) =>
 	Effect.runPromise(parseChangesets({ changesetPath }).pipe(Effect.provide(fsWith({ [DIR]: files }))));
 
@@ -58,6 +38,32 @@ describe("parseChangesetFile", () => {
 			summary: "Adds a thing",
 			releases: [{ name: "@scope/a", type: "minor" }],
 		});
+	});
+
+	/**
+	 * The failure this guards is silent, which is what makes it worth a test.
+	 *
+	 * @remarks
+	 * The delimiter expression anchors on `\n`. A CRLF changeset did not match at
+	 * all, and an unmatched file is returned as `null` — so the file's releases
+	 * were dropped without an error, and `parseChangesets` could report
+	 * `releaseType: null` for a branch that genuinely had a release queued.
+	 *
+	 * Byte-identical to the LF case above apart from the line endings, so a
+	 * regression shows up as a difference in line-ending handling and nothing else.
+	 */
+	it("parses a CRLF changeset identically to an LF one", () => {
+		const parsed = parseChangesetFile('---\r\n"@scope/a": minor\r\n---\r\n\r\nAdds a thing\r\n', "brave-cats-sing");
+		expect(parsed).toEqual({
+			id: "brave-cats-sing",
+			summary: "Adds a thing",
+			releases: [{ name: "@scope/a", type: "minor" }],
+		});
+	});
+
+	it("parses a lone-CR changeset", () => {
+		const parsed = parseChangesetFile('---\r"@scope/a": patch\r---\r\rClassic Mac endings\r', "id");
+		expect(parsed?.releases).toEqual([{ name: "@scope/a", type: "patch" }]);
 	});
 
 	it("parses multiple package releases", () => {
