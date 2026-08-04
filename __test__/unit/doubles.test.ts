@@ -39,30 +39,49 @@ describe("actionEnvironmentTest", () => {
 	});
 
 	/**
-	 * The R10 discriminating test.
+	 * The discriminating test for an unserved payload.
 	 *
 	 * @remarks
-	 * Overriding `GITHUB_EVENT_PATH` points `payload` at a file the double never
-	 * arranged. A permissive stub would answer with an empty string, `JSON.parse`
-	 * would fail as a *typed* environment error, and the test would look like an
-	 * ordinary handled failure. The double must **die** instead, so the gap is
-	 * unmissable and names the path it was asked for.
+	 * Successor to the R10 guard the hand-built double enforced. That double read
+	 * the event file through a stub and **died** on a path it had not arranged;
+	 * `layerTest` serves the payload directly, so there is no filesystem read left
+	 * to mis-arrange and no defect to assert.
+	 *
+	 * The gap it protected against still exists in a different shape: a case that
+	 * forgets its payload must not silently receive an empty one. Omitting the
+	 * argument falls back to reading `GITHUB_EVENT_PATH` through the stubbed
+	 * filesystem and fails **typed**, naming the variable — loud in a different
+	 * register, and the reason the alias does not default `payload` to `{}`.
+	 *
+	 * Seeding `GITHUB_EVENT_PATH` deliberately proves it is ignored: the payload
+	 * is served from the argument, not from a path.
 	 */
-	it("dies on a filesystem read it did not arrange", async () => {
+	it("fails typed and names the variable when no payload is served", async () => {
 		const exit = await Effect.runPromiseExit(
 			ActionEnvironment.pipe(
 				Effect.flatMap((env) => env.payload),
-				Effect.provide(actionEnvironmentTest({ GITHUB_EVENT_PATH: "/not/arranged.json" }, {})),
+				Effect.provide(actionEnvironmentTest({ GITHUB_EVENT_PATH: "/not/arranged.json" })),
 			),
 		);
 
 		expect(Exit.isFailure(exit)).toBe(true);
 		if (Exit.isFailure(exit)) {
-			// A defect, not a typed failure: the test arranged the wrong thing, and
-			// that is a bug in the test rather than a condition the action handles.
-			expect(Cause.hasDies(exit.cause)).toBe(true);
-			expect(Cause.pretty(exit.cause)).toContain("/not/arranged.json");
+			// Typed, not a defect — the kit models an unserved payload as a handled
+			// environment condition rather than a bug in the harness.
+			expect(Cause.hasDies(exit.cause)).toBe(false);
+			expect(Cause.pretty(exit.cause)).toContain("GITHUB_EVENT_PATH");
 		}
+	});
+
+	it("serves the payload from the argument, ignoring GITHUB_EVENT_PATH", async () => {
+		const result = await Effect.runPromise(
+			ActionEnvironment.pipe(
+				Effect.flatMap((env) => env.payload),
+				Effect.provide(actionEnvironmentTest({ GITHUB_EVENT_PATH: "/never/read.json" }, { served: true })),
+			),
+		);
+
+		expect(result).toEqual({ served: true });
 	});
 });
 

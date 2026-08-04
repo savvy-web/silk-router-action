@@ -28,27 +28,31 @@ Never restore those variables inside a test.
 
 Live in `__test__/utils/doubles.ts`.
 
-### `actionEnvironmentTest(env, payload)`
+### `actionEnvironmentTest(env, payload?)`
 
-Use this instead of `ActionEnvironment.layerTest` whenever a test needs the
-webhook payload.
+A thin alias over `ActionEnvironment.layerTest`, kept so the call sites read as
+one concept and the payload stays named at the seam.
 
-`layerTest` hard-provides `FileSystem.layerNoop({})`, and the environment
-captures its filesystem at layer-construction time — which is why `payload`
-carries no `FileSystem` in its requirement channel. Through `layerTest` that
-captured filesystem is the noop, so a seeded `GITHUB_EVENT_PATH` **can never
-resolve**: the injection point is closed, not merely unseeded. `makeTest` leaves
-the filesystem injectable, which is what this double exploits.
+It was a hand-built double until `@effected/github-actions@0.5.0`: `layerTest`
+hard-provided `FileSystem.layerNoop({})` and the environment captures its
+filesystem at layer-construction time, so a seeded `GITHUB_EVENT_PATH` could
+never resolve — the injection point was closed, not merely unseeded. The kit now
+serves the payload through a second positional argument, so the filesystem stub
+is gone.
 
-Its stub **dies** on any read it did not arrange.
+⚠️ **`payload` is deliberately not defaulted.** Omitting it means *not served*:
+the shape falls back to reading `GITHUB_EVENT_PATH` through the stubbed
+filesystem and fails **typed**, naming the variable. Defaulting it to `{}` would
+make that state unreachable and quietly delete the guard. A case that wants an
+empty payload passes `{}` explicitly. Pinned by "fails typed and names the
+variable when no payload is served" in `__test__/unit/doubles.test.ts` — a
+discriminating test, verified by re-adding the default and watching it fail.
 
-Note *why*, because the obvious reason is wrong: `layerNoop` is **not**
-permissive. Core's `makeNoop` fails every member it was not given with
-`notFound`. But overriding a member replaces that failing default, so the die
-branch is what keeps `readFileString` honest — without it an unarranged read
-returns whatever the override happens to yield, and a phantom file parses as
-"no frontmatter" rather than failing. The guard protects against our own
-override, not against the kit.
+Note that the failure is **typed, not a defect**. The hand-built double died,
+because an unarranged read was a bug in the harness. The kit models an unserved
+payload as a handled environment condition instead. Both are loud; they are loud
+in different registers, and a test asserting the old register will not catch the
+new one.
 
 ### `actionOutputsRecording()`
 

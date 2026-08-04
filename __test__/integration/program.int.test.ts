@@ -174,6 +174,54 @@ describe("program (failure path)", () => {
 		expect(Exit.isFailure(exit)).toBe(true);
 	});
 
+	/**
+	 * The discriminating test for the per-step summary line.
+	 *
+	 * @remarks
+	 * The port originally shipped `group` + `withBuffer`, which reproduced the
+	 * collapsible block and the buffering but dropped the one info line the legacy
+	 * `groupStep` emitted on success. `withStep` landed in
+	 * `@effected/github-actions@0.5.0` and closes that gap.
+	 *
+	 * Nothing observable distinguishes the two through the test double — every
+	 * wrapper is a pass-through, so a suite asserting only outputs stays green
+	 * either way. Asserting which member each step routes through is what makes
+	 * the regression detectable: swap `withStep` back to `withBuffer` in
+	 * `program.ts` and this fails while everything else still passes.
+	 */
+	it("routes every step through withStep, not withBuffer", async () => {
+		const stepped: Array<string> = [];
+		const buffered: Array<string> = [];
+		const { layer: outputs } = actionOutputsRecording();
+		const recordingLogger = ActionLogger.layerTest({
+			withStep: (name, effect) => {
+				stepped.push(name);
+				return effect;
+			},
+			withBuffer: (label, effect) => {
+				buffered.push(label);
+				return effect;
+			},
+		});
+		const layer = Layer.mergeAll(
+			outputs,
+			recordingLogger,
+			actionEnvironmentTest(
+				{ GITHUB_REF: "refs/heads/main", GITHUB_EVENT_NAME: "push", GITHUB_SHA: "abc" },
+				{ head_commit: { message: "feat: a thing" } },
+			),
+			PullRequest.layerTest({ listAssociatedWithCommit: () => Effect.succeed([]) }),
+			Repo.layer(RepoRef.make({ owner: "acme", repo: "example" })),
+			FileSystem.layerNoop({}),
+		);
+		await Effect.runPromise(
+			program.pipe(Effect.provide(layer), Effect.provide(ConfigProvider.layer(ActionInput.provider({})))),
+		);
+
+		expect(stepped).toEqual(["Detect workflow phase", "Parse changesets", "Emit outputs", "Write job summary"]);
+		expect(buffered).toEqual([]);
+	});
+
 	it("emits the all-disabled contract on the failure path", async () => {
 		const { recorder } = await runFailing();
 		const byName = Object.fromEntries(recorder.writes.map((w) => [w.name, w.value]));

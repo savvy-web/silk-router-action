@@ -10,21 +10,24 @@ import { writeSummary } from "./steps/write-summary.js";
  * Run one step in the log shape the legacy toolkit's `groupStep` produced.
  *
  * @remarks
- * Ruling R8: a collapsible block **and** discard-on-success buffering. The
- * legacy `groupStep` was `ActionLogger.group` + `withStep`; the kit supplies the
- * group and the buffering but has no summary-line emitter (ruling R5, issue
- * I-6), so the per-step success line is **not** reproduced. That loss is
- * deliberate and belongs in the changeset.
+ * A collapsible block **and** discard-on-success buffering, with one info line
+ * on success — the shape the legacy `groupStep` produced, which was
+ * `ActionLogger.group` + `withStep`.
  *
- * `withBuffer` does not buffer warnings or errors, so a long step still reports
- * trouble while it is running.
+ * `withStep` landed in `@effected/github-actions@0.5.0`, so this is now the
+ * legacy composition verbatim rather than an approximation of it. The port
+ * initially shipped `group` + `withBuffer`, which reproduced the block and the
+ * buffering but dropped the per-step success line.
+ *
+ * Neither `withBuffer` nor `withStep` buffers warnings or errors, so a long step
+ * still reports trouble while it is running.
  *
  * @internal
  */
 const step = <A, E, R>(name: string, effect: Effect.Effect<A, E, R>): Effect.Effect<A, E, R | ActionLogger> =>
 	Effect.gen(function* () {
 		const logger = yield* ActionLogger;
-		return yield* logger.group(name, logger.withBuffer(name, effect, { onSuccess: "discard" }));
+		return yield* logger.group(name, logger.withStep(name, effect));
 	});
 
 /**

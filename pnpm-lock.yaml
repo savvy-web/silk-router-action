@@ -58,8 +58,8 @@ importers:
         specifier: ^0.2.2
         version: 0.2.2(effect@4.0.0-beta.101)
       '@effected/github-actions':
-        specifier: ^0.4.1
-        version: 0.4.1(@effect/platform-node@4.0.0-beta.101(effect@4.0.0-beta.101)(ioredis@5.11.1(supports-color@7.2.0)))(@effected/jsonc@0.5.2(effect@4.0.0-beta.101))(@effected/semver@0.3.1(effect@4.0.0-beta.101))(@effected/toml@0.3.2(effect@4.0.0-beta.101))(@effected/yaml@0.6.1(effect@4.0.0-beta.101))(effect@4.0.0-beta.101)(supports-color@7.2.0)
+        specifier: ^0.5.0
+        version: 0.5.0(@effect/platform-node@4.0.0-beta.101(effect@4.0.0-beta.101)(ioredis@5.11.1(supports-color@7.2.0)))(@effected/jsonc@0.5.2(effect@4.0.0-beta.101))(@effected/semver@0.3.1(effect@4.0.0-beta.101))(@effected/toml@0.3.2(effect@4.0.0-beta.101))(@effected/yaml@0.6.1(effect@4.0.0-beta.101))(effect@4.0.0-beta.101)(supports-color@7.2.0)
       effect:
         specifier: catalog:effect
         version: 4.0.0-beta.101
@@ -408,8 +408,8 @@ packages:
     peerDependencies:
       effect: 4.0.0-beta.101
 
-  '@effected/github-actions@0.4.1':
-    resolution: {integrity: sha512-ptWynnqTy82/l+ZUdvKP8ASj48edGbvop5cDqPFzGvToNiLeiZ3C3uMM9D+xV16WKOIzJvnLUXj3efqQ+V7ygw==}
+  '@effected/github-actions@0.5.0':
+    resolution: {integrity: sha512-cdHMSMPQd/7dOGzVdlY5QZUZwsg8rVbuPu/pwNBv1QbkVsr/fMn2a6ybOkIkxhU4zlldGlkIpQEWW4hlz4MEuQ==}
     engines: {node: '>=24.11.0'}
     peerDependencies:
       '@effect/platform-node': 4.0.0-beta.101
@@ -3806,7 +3806,7 @@ snapshots:
     dependencies:
       effect: 4.0.0-beta.101
 
-  '@effected/github-actions@0.4.1(@effect/platform-node@4.0.0-beta.101(effect@4.0.0-beta.101)(ioredis@5.11.1(supports-color@7.2.0)))(@effected/jsonc@0.5.2(effect@4.0.0-beta.101))(@effected/semver@0.3.1(effect@4.0.0-beta.101))(@effected/toml@0.3.2(effect@4.0.0-beta.101))(@effected/yaml@0.6.1(effect@4.0.0-beta.101))(effect@4.0.0-beta.101)(supports-color@7.2.0)':
+  '@effected/github-actions@0.5.0(@effect/platform-node@4.0.0-beta.101(effect@4.0.0-beta.101)(ioredis@5.11.1(supports-color@7.2.0)))(@effected/jsonc@0.5.2(effect@4.0.0-beta.101))(@effected/semver@0.3.1(effect@4.0.0-beta.101))(@effected/toml@0.3.2(effect@4.0.0-beta.101))(@effected/yaml@0.6.1(effect@4.0.0-beta.101))(effect@4.0.0-beta.101)(supports-color@7.2.0)':
     dependencies:
       '@azure/storage-blob': 12.33.0(supports-color@7.2.0)
       '@effect/platform-node': 4.0.0-beta.101(effect@4.0.0-beta.101)(ioredis@5.11.1(supports-color@7.2.0))

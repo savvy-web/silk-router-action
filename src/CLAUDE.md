@@ -79,13 +79,22 @@ itself. Its failure posture is documented in its TSDoc:
 ## Logging
 
 `program.ts`'s local `step` helper wraps each step in
-`logger.group(name, logger.withBuffer(name, effect, { onSuccess: "discard" }))` —
-a collapsible block plus discard-on-success buffering. Warnings and errors are
-never buffered, so a long step still reports trouble while it runs.
+`logger.group(name, logger.withStep(name, effect))` — a collapsible block, a
+buffer discarded on success, and one info line reporting the step happened.
+Warnings and errors are never buffered, so a long step still reports trouble
+while it runs.
 
-The legacy toolkit's `Step.groupStep` also emitted **one summary line per step**
-on success. `ActionLogger` has no equivalent, so that line is gone. The loss is
-accepted (R8) and recorded in the changeset — not reproduced by a local helper.
+That is the legacy `Step.groupStep` composition verbatim: `group` + `withStep`.
+The port initially shipped `group` + `withBuffer`, which reproduced the block and
+the buffering but dropped the per-step success line, because `ActionLogger` had
+no summary emitter. `withStep` landed in `@effected/github-actions@0.5.0` and
+closed the gap.
+
+⚠️ **Nothing observable distinguishes `withStep` from `withBuffer` through the
+test double** — every wrapper there is a pass-through, so a suite asserting only
+outputs stays green either way. The regression is caught by asserting which
+member each step routes through, in `__test__/integration/program.int.test.ts`.
+Keep that test; it is the only thing standing between this and a silent revert.
 
 ## Code style
 

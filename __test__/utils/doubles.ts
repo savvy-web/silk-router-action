@@ -1,5 +1,6 @@
 import { ActionEnvironment, ActionOutputs } from "@effected/github-actions";
-import { Effect, FileSystem, Layer } from "effect";
+import type { Layer } from "effect";
+import { Effect } from "effect";
 
 /**
  * Test doubles for this action's suites.
@@ -10,44 +11,32 @@ import { Effect, FileSystem, Layer } from "effect";
  */
 
 /**
- * An {@link ActionEnvironment} that can actually serve a webhook payload.
+ * An {@link ActionEnvironment} serving a webhook payload.
  *
  * @remarks
- * **Why this exists rather than `ActionEnvironment.layerTest`.** `layerTest`
- * hard-provides `FileSystem.layerNoop({})`, and `make(env)` captures the
- * filesystem at layer-construction time — which is exactly why `payload` carries
- * no `FileSystem` in its requirement channel. Through `layerTest` the captured
- * filesystem is therefore the noop, and a seeded `GITHUB_EVENT_PATH` can never
- * resolve: the injection point is closed, not merely unseeded.
+ * A thin alias over `ActionEnvironment.layerTest`, kept so the ~40 call sites
+ * read as one concept and so the payload argument stays named at the seam.
  *
- * `makeTest` returns `Effect<ActionEnvironmentShape, never, FileSystem>` and
- * leaves the filesystem injectable, so we compose it ourselves with a stub that
- * serves the event file. See dossier entry `D-06`.
+ * This was a hand-built double until `@effected/github-actions@0.5.0`. `layerTest`
+ * hard-provided `FileSystem.layerNoop({})` and `make(env)` captures the filesystem
+ * at layer-construction time, so a seeded `GITHUB_EVENT_PATH` could never resolve —
+ * the injection point was closed, not merely unseeded. The kit now serves the
+ * payload directly through a second positional argument, so the filesystem stub
+ * and its die guard are gone.
  *
- * `makeTest` merges `overrides` over a complete set of runner defaults, so a
+ * **`payload` is deliberately not defaulted.** Omitting it means *not served*:
+ * the shape falls back to reading `GITHUB_EVENT_PATH` through the stubbed
+ * filesystem and fails typed, naming the variable. Defaulting it to `{}` here
+ * would make that state unreachable and quietly delete the guard the hand-built
+ * double existed to provide. A case that wants an empty payload passes `{}`.
+ *
+ * `layerTest` merges `overrides` over a complete set of runner defaults, so a
  * caller supplies only the variables its case actually turns on.
  */
 export const actionEnvironmentTest = (
 	env: Readonly<Record<string, string>>,
-	payload: unknown = {},
-): Layer.Layer<ActionEnvironment> => {
-	const eventPath = "/github/workflow/event.json";
-	const fs = FileSystem.layerNoop({
-		readFileString: (path: string) =>
-			path === eventPath
-				? Effect.succeed(JSON.stringify(payload))
-				: // Anything else is a read the test did not arrange. `layerNoop` is not
-					// permissive — core's `makeNoop` fails every member it was not given
-					// with `notFound`. But overriding `readFileString` replaces that
-					// default, so this branch is what keeps the member honest: without it,
-					// an unarranged read returns whatever the override happens to yield,
-					// and a phantom file parses as "no frontmatter" instead of failing.
-					Effect.die(`unstubbed readFileString: ${path}`),
-	});
-	return Layer.effect(ActionEnvironment, ActionEnvironment.makeTest({ GITHUB_EVENT_PATH: eventPath, ...env })).pipe(
-		Layer.provide(fs),
-	);
-};
+	payload?: unknown,
+): Layer.Layer<ActionEnvironment> => ActionEnvironment.layerTest(env, payload);
 
 /** One recorded output write. */
 export interface RecordedOutput {
