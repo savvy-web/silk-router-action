@@ -40,9 +40,15 @@ captured filesystem is the noop, so a seeded `GITHUB_EVENT_PATH` **can never
 resolve**: the injection point is closed, not merely unseeded. `makeTest` leaves
 the filesystem injectable, which is what this double exploits.
 
-Its stub **dies** on any read it did not arrange, which is what stops
-`layerNoop`'s permissiveness from turning an unstubbed read into a silent empty
-success.
+Its stub **dies** on any read it did not arrange.
+
+Note *why*, because the obvious reason is wrong: `layerNoop` is **not**
+permissive. Core's `makeNoop` fails every member it was not given with
+`notFound`. But overriding a member replaces that failing default, so the die
+branch is what keeps `readFileString` honest — without it an unarranged read
+returns whatever the override happens to yield, and a phantom file parses as
+"no frontmatter" rather than failing. The guard protects against our own
+override, not against the kit.
 
 ### `actionOutputsRecording()`
 

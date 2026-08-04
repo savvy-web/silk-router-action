@@ -36,9 +36,12 @@ export const actionEnvironmentTest = (
 		readFileString: (path: string) =>
 			path === eventPath
 				? Effect.succeed(JSON.stringify(payload))
-				: // Anything else is a read the test did not arrange. Failing here is
-					// what stops `layerNoop`'s permissiveness from turning an unstubbed
-					// read into a silent empty success.
+				: // Anything else is a read the test did not arrange. `layerNoop` is not
+					// permissive — core's `makeNoop` fails every member it was not given
+					// with `notFound`. But overriding `readFileString` replaces that
+					// default, so this branch is what keeps the member honest: without it,
+					// an unarranged read returns whatever the override happens to yield,
+					// and a phantom file parses as "no frontmatter" instead of failing.
 					Effect.die(`unstubbed readFileString: ${path}`),
 	});
 	return Layer.effect(ActionEnvironment, ActionEnvironment.makeTest({ GITHUB_EVENT_PATH: eventPath, ...env })).pipe(
