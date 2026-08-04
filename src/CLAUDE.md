@@ -1,130 +1,113 @@
 # src/CLAUDE.md
 
-Source code architecture and development guidelines for the `src/` directory of silk-router-action.
-
-**See also:** [Root CLAUDE.md](../CLAUDE.md) for repository overview, build commands, and Action interface.
+Source conventions for `src/`. **See also:** [Root CLAUDE.md](../CLAUDE.md) for
+the repository overview and the action interface.
 
 ## Overview
 
-The source tree follows an Effect-based layered architecture using `@savvy-web/github-action-effects` for all GitHub Actions runtime abstractions. Services live under `services/`, domain schemas under `schemas/`, tagged errors under `errors/`, and layer wiring under `layers/`. `program.ts` is the Effect pipeline that orchestrates every step — reading inputs, detecting the workflow phase, parsing changesets, emitting outputs, and writing the job summary. `main.ts` is a four-line entry point that hands `program` to `Action.run`. All tests are co-located with their source modules and rely on library-provided test layers from `@savvy-web/github-action-effects/testing` rather than environment variables or process mocks.
+Built on `@effected/github-actions` (the runner) and `@effected/github` (the
+GitHub API). The layout follows the kit's canonical action shape: a guarded entry
+point, a `program.ts` that is pure composition, one module per pipeline step
+under `steps/`, the input/output contracts as data under `schema/`, and exactly
+one rendering surface in `format.ts`.
 
-**Design documentation for this directory:**
+**Design documentation:**
 
-- Architecture and layer wiring → `@../.claude/design/silk-router-action/architecture.md` — Load when modifying `layers/app.ts`, adding services, or changing the Effect pipeline structure.
-- Phase detection algorithm → `@../.claude/design/silk-router-action/phase-detection.md` — Load when working on `services/phase-detector.ts` or adding new workflow phases.
-- Error model and effects library adoption → `@../.claude/design/silk-router-action/error-model.md` — Load when adding or changing `Schema.TaggedErrorClass` definitions in `errors/errors.ts`, or when understanding why `@actions/*` packages are absent.
+- Architecture and layer wiring → `@../.claude/design/silk-router-action/architecture.md`
+- Phase detection algorithm → `@../.claude/design/silk-router-action/phase-detection.md`
+- Error model → `@../.claude/design/silk-router-action/error-model.md`
+
+All three were rewritten for the ported structure.
 
 ## Layout
 
-- **`main.ts`** — Entry point. Calls `Action.run(program, { layer: MainLive })`. Do not add logic here.
-- **`program.ts`** — Top-level Effect pipeline. Reads Config inputs, yields services, calls each step inside `Step.groupStep`, and sets all outputs. Covered by `program.test.ts`.
-- **`program.test.ts`** — Integration test for the full pipeline; exercises all 10 outputs using `ActionOutputsTest` and `ActionEnvironmentTest`.
-- **`layers/app.ts`** — `MainLive` layer composition. Wires `GitHubClientLive`, `ActionOutputsLive`, `ActionEnvironmentLive`, `NodeFileSystem`, and `PhaseDetectorLive`. No logic — pure layer assembly. (Under `@savvy-web/github-action-effects` v3 / Effect v4, `GitHubClientLive.fromEnv()` builds its own transport, so no `NodeHttpClient` layer is provided.)
-- **`services/phase-detector.ts`** — class-based `PhaseDetector` `Context.Service` (with an exported `PhaseDetectorShape` interface) + `PhaseDetectorLive` layer. Determines which workflow phase applies by inspecting the GitHub context, querying the PR-association API, and falling back to commit-message patterns. `FileSystem` is captured from `effect` core so `detect` stays `R = never`.
-- **`services/phase-detector.test.ts`** — Co-located tests for `PhaseDetector`; uses `ActionEnvironmentTest.layer` and a hand-rolled `GitHubClient` mock to simulate all six phase scenarios and API-failure fallback.
-- **`services/changesets.ts`** — Pure Effect function `parseChangesets()` that reads `.changeset/*.md` files from disk via `node:fs` and returns counts, bump type, and affected packages.
-- **`services/changesets.test.ts`** — Co-located tests for changeset parsing.
-- **`services/summary.ts`** — `writeJobSummary()` function. Builds a markdown job summary from detection and changeset results using `GithubMarkdown` and writes it via `ActionOutputs.summary`.
-- **`services/summary.test.ts`** — Co-located tests for summary rendering.
-- **`schemas/domain.ts`** — Effect Schema definitions for `WorkflowPhase`, `BumpType`, `ParsedChangeset`, and `PhaseDetectionResult`. Single source of truth for all domain types.
-- **`schemas/domain.test.ts`** — Co-located schema validation tests.
-- **`errors/errors.ts`** — a single `Schema.TaggedErrorClass`: `ChangesetParseError` (string fields validated via `Schema.isMinLength(1)`), with a computed `.message` getter.
-- **`errors/errors.test.ts`** — Co-located error construction/message tests.
+- **`main.ts`** — the entry point, and nothing else: a program import plus one
+  call guarded on `process.env.GITHUB_ACTIONS`. The guard is what keeps the
+  module importable, and therefore testable, without running the action as an
+  import side effect.
+- **`program.ts`** — pure composition. Reads inputs, runs the steps in order,
+  folds their results into the output contract, reports. No I/O of its own, no
+  formatting, no step bodies.
+- **`layers/app.ts`** — the only services the runtime does not already provide:
+  `GitHubClient`, `Repo`, `PullRequest`. Deliberately small — anything in
+  `ActionServices` must not appear here.
+- **`schema/domain.ts`** — `WorkflowPhase`, `BumpType`, `ChangesetRelease`,
+  `ParsedChangeset`, `PhaseDetectionResult`.
+- **`schema/inputs.ts`** — `INPUT_NAMES` (4), `INPUT_DEFAULTS`, and a
+  decoded-once `readInputs`.
+- **`schema/outputs.ts`** — `OUTPUT_NAMES` (10), `DISABLED_OUTPUTS`,
+  `foldOutputs`, and the single `emitOutputs` emitter.
+- **`steps/detect-phase.ts`** — which release phase this run is in. Queries the
+  pull requests associated with the head commit, falls back to commit-message
+  patterns, and absorbs GitHub's PR-association lag with a scheduled retry.
+- **`steps/parse-changesets.ts`** — reads `.changeset/` through core's
+  `FileSystem`; owns `ChangesetParseError`.
+- **`steps/write-summary.ts`** — writes the job-summary panel.
+- **`format.ts`** — the one rendering surface. Pure and service-free, so a test
+  imports it without a layer.
 
-## Step.groupStep Convention
+`services/` and `shims/` are **conventions, not tracked directories**. This
+action currently needs neither: a step used exactly once stays a step, and is
+promoted to `services/` only when a second step needs the same capability.
 
-Every discrete step in `program.ts` is wrapped with `Step.groupStep`:
+## Non-negotiables
 
-```typescript
-const phase = yield* Step.groupStep("Detect workflow phase", detector.detect({ releaseBranch, targetBranch }));
-const changesets = yield* Step.groupStep("Parse changesets", parseChangesets());
-```
+- **`action.yml` is the single source of input and output names and defaults.**
+  The tuples in `schema/` mirror it; they never re-declare it. The three-way
+  check is enforced by `__test__/unit/parity.test.ts` — **4 inputs, 10 outputs**.
+- **Read inputs through `ActionInput`, never a bare `Config.*`.** The runner
+  publishes `INPUT_<MANGLED>` names.
+- **⚠️ The mangling preserves hyphens.** `release-branch` becomes
+  `INPUT_RELEASE-BRANCH`, not `INPUT_RELEASE_BRANCH` — only *spaces* become
+  underscores. A test seeding the underscore spelling proves nothing.
+- **`Repo` is resolved per call**, never captured at layer construction —
+  capturing it makes `Repo.provide` silently do nothing.
+- **One emitter writes every output**, driven by iterating `OUTPUT_NAMES`.
 
-`Step.groupStep(title, effect)` does three things:
+## Step conventions
 
-1. Opens a collapsible group block in the GitHub Actions runner UI (equivalent to `::group::` / `::endgroup::` annotations).
-2. Buffers all log lines emitted inside the group.
-3. On success the group is collapsed — quiet in CI. On failure the buffered lines are printed before the error — verbose exactly when you need it.
+Each step module exports a result type, a tagged error **only when the step can
+actually fail**, an explicitly annotated requirement channel, and the step
+itself. Its failure posture is documented in its TSDoc:
 
-Use one `Step.groupStep` per logical unit of work. Never nest group steps.
+| Step | Posture |
+| --- | --- |
+| `detectPhase` | degrade-to-warning — an API failure falls back to commit-message detection; `E = never`. **Only** the five `GitHubError` kinds meaning "the API could not answer" degrade; `decode` and `alreadyExists` fall through to `Effect.orDie` and surface as defects. Widening that predicate would make this row a lie. |
+| `parseChangesets` | fail-the-job — `ChangesetParseError` propagates |
+| `writeSummary` | fail-the-job as a defect — preserved from the pre-port `Effect.orDie` |
 
-## Inputs — Before and After
+## Logging
 
-### Before (v1 pattern — do not use)
+`program.ts`'s local `step` helper wraps each step in
+`logger.group(name, logger.withBuffer(name, effect, { onSuccess: "discard" }))` —
+a collapsible block plus discard-on-success buffering. Warnings and errors are
+never buffered, so a long step still reports trouble while it runs.
 
-```typescript
-const releaseBranch = core.getInput("release-branch") || "changeset-release/main";
-const targetBranch = core.getInput("target-branch") || "main";
-```
+The legacy toolkit's `Step.groupStep` also emitted **one summary line per step**
+on success. `ActionLogger` has no equivalent, so that line is gone. The loss is
+accepted (R8) and recorded in the changeset — not reproduced by a local helper.
 
-### After (v2 pattern — use this)
+## Code style
 
-```typescript
-const releaseBranch = yield* Config.string("release-branch").pipe(Config.withDefault("changeset-release/main"));
-const targetBranch = yield* Config.string("target-branch").pipe(Config.withDefault("main"));
-```
+Enforced by Biome; violations fail CI. Tabs, 120 columns, `.js` extensions on
+every relative import, `node:` protocol for built-ins, separate `import type`,
+explicit return types on exports.
 
-`Action.run` installs a `ConfigProvider` that maps `INPUT_<NAME>` environment variables to Config keys. Using the Effect Config API means inputs are testable via `ConfigProvider.fromUnknown({ ... })` without touching `process.env`.
+## The release-detection retry
 
-## Outputs — Before and After
+`detect-phase` retries the PR-association lookup when the head commit message
+starts with `release-prefix`, to absorb GitHub's propagation lag. **Three retries,
+ten seconds apart; an empty prefix disables it entirely.**
 
-### Before (v1 pattern — do not use)
+Absence of the association is modelled as an internal tagged failure —
+`ReleasePRNotVisibleYet` — purely so `Effect.retry` has something on the error
+channel to act on, since retry cannot see an empty success. It is caught at the
+boundary of the retry pipeline and **never** escapes: `detectPhase` keeps
+`E = never`, and the tag is deliberately absent from the `GitHubError` degrade
+predicate, where it would short-circuit the very retry it drives.
 
-```typescript
-core.setOutput("phase", phase.phase);
-core.setOutput("has_changesets", changesets.hasChangesets ? "true" : "false");
-```
-
-### After (v2 pattern — use this)
-
-```typescript
-const outputs = yield* ActionOutputs;
-yield* outputs.set("phase", phase.phase);
-yield* outputs.set("has_changesets", changesets.hasChangesets ? "true" : "false");
-```
-
-`ActionOutputs` is a service provided by the layer. In production it writes to `$GITHUB_OUTPUT`. In tests it writes to the mutable state object returned by `ActionOutputsTest.empty()`, which can be inspected after the run.
-
-## Library Test Layer Pattern
-
-Tests for `program.ts` and any service that depends on `ActionOutputs` or `ActionEnvironment` use the library's test layers:
-
-```typescript
-import { ActionEnvironmentTest, ActionLoggerTest, ActionOutputsTest } from "@savvy-web/github-action-effects/testing";
-
-const state = ActionOutputsTest.empty();
-const layer = Layer.mergeAll(
- ActionOutputsTest.layer(state),
- ActionLoggerTest.layer(ActionLoggerTest.empty()),
- ActionEnvironmentTest.layer(env, payload),
-);
-await Effect.runPromise(program.pipe(Effect.provide(layer)));
-```
-
-After the run, assert against `state.outputs` (an array of `{ name, value }` pairs). For services that need a `GitHubClient`, provide a hand-rolled `Layer.succeed(GitHubClient, { ... })` as seen in `services/phase-detector.test.ts`. For failure-injection (simulating API errors), use `Effect.die(...)` inside the mock method.
-
-Action inputs are injected into the Config system via `Effect.provide(ConfigProvider.layer(ConfigProvider.fromUnknown({ ... })))` — no `process.env` mutation needed.
-
-## Token Plumbing
-
-The action declares a `token` input in `action.yml`. Callers pass their `secrets.GITHUB_TOKEN` to it:
-
-```yaml
-- uses: savvy-web/silk-router-action@v1
-  with:
-    token: ${{ secrets.GITHUB_TOKEN }}
-```
-
-`Action.run` (in `main.ts`) bridges `INPUT_TOKEN` → `GITHUB_TOKEN` for the duration of the run before setting up the layer. `GitHubClientLive.fromEnv()` in `layers/app.ts` then reads `GITHUB_TOKEN` to authenticate the Octokit client.
-
-The result: the existing `token` action input authenticates the GitHub client without any explicit `Config.redacted("token")` read in `program.ts`. The token never appears in program logic — it flows through the runtime bridge automatically.
-
-## Code Style Summary
-
-These rules are enforced by Biome and will fail CI if violated:
-
-- **Tabs** for indentation, **120-character** line width.
-- **`.js` extensions** on all local imports, even when the source file is `.ts`.
-- **`node:` protocol** for built-in Node.js modules (`import * as fs from "node:fs"`).
-- **Separate type imports**: `import type { Foo } from "./foo.js"` — never mixed with value imports.
-- **Explicit return types** required on all exported functions and class members (except test files and `lib/scripts/`).
+⚠️ The "ten seconds apart" half of that contract is easy to lose. A retry test
+that advances a generous virtual budget and asserts only the call *count* passes
+whatever the spacing is; `__test__/unit/steps/detect-phase.test.ts` has one case
+that advances deliberately short and asserts progress, and that is the only thing
+pinning the interval.

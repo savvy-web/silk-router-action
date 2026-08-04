@@ -85,33 +85,36 @@ Load when making structural changes, adding services, or modifying the layer wir
 
 Load when working on phase detection logic, adding new phases, or debugging incorrect phase assignments.
 
-**For error model and `@savvy-web/github-action-effects` adoption rationale:**
+**For the error model — failure postures, the narrow degradation predicate, the retry sentinel:**
 → `@./.claude/design/silk-router-action/error-model.md`
 
-Load when adding new error types, modifying `Schema.TaggedErrorClass` definitions, or understanding why `@actions/*` packages are absent.
+Load when adding an error type, changing a step's failure posture, or touching the degradation predicate in `detect-phase`.
 
-- `src/main.ts` — 4-line entry: `Action.run(program, { layer: MainLive })`.
-- `src/program.ts` — main Effect program.
-- `src/layers/app.ts` — `MainLive` composition.
-- `src/schemas/domain.ts` — `WorkflowPhase`, `BumpType`, `ChangesetRelease`, `ParsedChangeset`, `PhaseDetectionResult` schemas.
-- `src/errors/errors.ts` — single `ChangesetParseError` (`Schema.TaggedErrorClass`) with a computed `.message` getter.
-- `src/services/phase-detector.ts` — class-based `PhaseDetector` `Context.Service` (exports `PhaseDetectorShape`) for phase detection.
-- `src/services/changesets.ts` — Effect-wrapped changeset parser.
-- `src/services/summary.ts` — markdown job-summary builder using `GithubMarkdown.*`.
-- Tests are co-located: `src/services/foo.ts` next to `src/services/foo.test.ts`. No `__tests__/` directory.
+- `src/main.ts` — the entry point: a program import plus one `Action.run` call guarded on `GITHUB_ACTIONS`, so the module stays importable in tests.
+- `src/program.ts` — pure composition: read inputs, run steps, fold outputs, report.
+- `src/layers/app.ts` — `AppLayer`: only what `ActionRuntime.layer` does not already provide.
+- `src/schema/domain.ts` — `WorkflowPhase`, `BumpType`, `ChangesetRelease`, `ParsedChangeset`, `PhaseDetectionResult` schemas.
+- `src/schema/inputs.ts` — `INPUT_NAMES` (4), `INPUT_DEFAULTS` mirrored from `action.yml`, and a decoded-once `readInputs`.
+- `src/schema/outputs.ts` — `OUTPUT_NAMES` (10), `DISABLED_OUTPUTS`, the fold, and the single emitter.
+- `src/steps/detect-phase.ts` — phase detection; owns the PR-association query and the scheduled retry.
+- `src/steps/parse-changesets.ts` — changeset reader over core `FileSystem`; owns `ChangesetParseError`.
+- `src/steps/write-summary.ts` — writes the job-summary panel.
+- `src/format.ts` — the single rendering surface, pure and service-free.
+- Tests live under `__test__/unit/` and `__test__/integration/`, with doubles in `__test__/utils/`.
 
 ## Technical Stack
 
-- **Effect v4** (`effect@4.0.0-beta.98`, `catalog:effect`) for typed errors, dependency injection, and service composition.
-- **`@savvy-web/github-action-effects` ^3.0.0** — provides `Step.groupStep` for buffered logging, `GithubMarkdown.*` for summary helpers, `ActionInput.*` for typed input parsing, library `<Service>Test` test layers (via `@savvy-web/github-action-effects/testing`).
+- **Effect v4** (`effect@4.0.0-beta.101`, `catalog:effect`) for typed errors, dependency injection, and service composition.
+- **`@effected/github-actions` ^0.4.1** — the runner: `Action.run`, `ActionRuntime.layer`, `ActionInput.*`, `ActionOutputs`, `ActionLogger`, `GitHubMarkdown`. Each service ships its own `makeTest`/`layerTest`; there is no separate testing subpath.
+- **`@effected/github` ^0.2.2** — the GitHub API: `GitHubClient`, `PullRequest`, `Repo`, and one `GitHubError` carrying a `kind` discriminant.
 - **`@savvy-web/github-action-builder` ^2.0.0** (rsbuild-based) configured via `action.config.ts`.
-- **`@effect/platform-node`** at catalog:effect (provides `NodeFileSystem`); `@effect/platform` is gone — dissolved into `effect` core (so `FileSystem` now imports from `effect`).
+- **`@effect/platform-node`** at catalog:effect — a required peer of `@effected/github-actions`, composed by `ActionRuntime.layer` rather than wired by hand. `FileSystem` imports from `effect` core.
 - **`@savvy-web/silk` ^3.0.0** release toolchain (changesets v3 engine).
 - **pnpm 11.13.0**, **Node 26.5.0** (`devEngines.runtime`); the action itself bundles to `runs.using: node24` (the latest supported by GitHub Actions runners today).
 - **Biome 2.5.1** with strict rules.
 - **Vitest** with Effect test layers.
 - **Type checking:** TypeScript Native Preview (`tsgo --noEmit`).
-- **Direct dependencies:** Zero `@actions/*` packages — all GitHub Actions integration is provided by `@savvy-web/github-action-effects`.
+- **Direct dependencies:** Zero `@actions/*` packages — all GitHub Actions integration comes from `@effected/github-actions` and `@effected/github`.
 
 ## Build & Development Commands
 
@@ -126,7 +129,7 @@ pnpm build
 pnpm test                    # or pnpm ci:test
 
 # Run a single test file
-pnpm vitest src/services/phase-detector.test.ts
+pnpm vitest __test__/unit/steps/detect-phase.test.ts
 
 # Run tests matching a pattern
 pnpm vitest -t "branch-management"
@@ -154,15 +157,14 @@ We author every dependency in the table below, so a bug or missing API in one ca
 
 | Package | Repo | Local checkout |
 | --- | --- | --- |
-| `@savvy-web/github-action-effects` | `savvy-web/github-action-effects` | `../github-action-effects` |
 | `@savvy-web/github-action-builder` | `savvy-web/github-action-builder` | `../github-action-builder` |
 
-Both are direct-only dependencies with no transitive duplication path, so `pnpm link ../<repo>` is the linking mechanism for either. The `pnpm-workspace.yaml` `overrides` mechanism is not needed here unless a future first-party transitive dependency is introduced.
+It is a direct-only dependency with no transitive duplication path, so `pnpm link ../<repo>` is the linking mechanism. The `pnpm-workspace.yaml` `overrides` mechanism is not needed here unless a future first-party transitive dependency is introduced.
 
 **Procedure:**
 
 1. **Build the library:** in its repo run `pnpm ci:build` (produces `dist/dev` link target).
-2. **Link it:** `pnpm link ../github-action-effects` here, then `pnpm install`.
+2. **Link it:** `pnpm link ../<repo>` here, then `pnpm install`.
 3. **Keep the declared range correct** in this repo's `package.json` for the eventual unlinked install.
 4. **Iterate:** edit library source → `pnpm ci:build` there → `pnpm typecheck` + `pnpm test` here → `pnpm build` here → commit (`src` + `dist` + changeset) → push `dev`.
 5. **Library edits ship separately:** they land on the library's own branch and release with its next published version.
@@ -222,19 +224,23 @@ Biome enforces strict rules:
 ```text
 .
 ├── src/
-│   ├── main.ts                # 4-line Action.run(program, { layer: MainLive })
-│   ├── program.ts             # main Effect program
-│   ├── program.test.ts        # integration test
+│   ├── main.ts                # guarded Action.run(program, { layer: AppLayer })
+│   ├── program.ts             # pure composition
+│   ├── format.ts              # the one rendering surface
 │   ├── layers/
-│   │   └── app.ts             # MainLive composition
-│   ├── schemas/
-│   │   └── domain.ts          # + domain.test.ts
-│   ├── errors/
-│   │   └── errors.ts          # + errors.test.ts
-│   └── services/
-│       ├── phase-detector.ts  # + phase-detector.test.ts
-│       ├── changesets.ts      # + changesets.test.ts
-│       └── summary.ts         # + summary.test.ts
+│   │   └── app.ts             # AppLayer composition
+│   ├── schema/
+│   │   ├── domain.ts
+│   │   ├── inputs.ts          # INPUT_NAMES (4) + readInputs
+│   │   └── outputs.ts         # OUTPUT_NAMES (10) + fold + emitter
+│   └── steps/
+│       ├── detect-phase.ts
+│       ├── parse-changesets.ts
+│       └── write-summary.ts
+├── __test__/
+│   ├── unit/                  # mirrors src/ module for module
+│   ├── integration/           # *.int.test.ts
+│   └── utils/                 # doubles — helper code, never tests
 ├── dist/
 │   └── main.js                # compiled bundle
 ├── .github/
