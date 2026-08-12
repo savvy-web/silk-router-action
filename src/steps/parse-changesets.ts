@@ -12,7 +12,7 @@ import type { BumpType, ChangesetRelease, ParsedChangeset } from "../schema/doma
  *
  * @public
  */
-export class ChangesetParseError extends Schema.TaggedErrorClass<ChangesetParseError>()("ChangesetParseError", {
+export class ChangesetParseError extends Schema.TaggedError<ChangesetParseError>()("ChangesetParseError", {
 	file: Schema.String.check(Schema.isMinLength(1)),
 	reason: Schema.String.check(Schema.isMinLength(1)),
 	cause: Schema.optional(Schema.Unknown),

@@ -104,16 +104,16 @@ Load when adding an error type, changing a step's failure posture, or touching t
 
 ## Technical Stack
 
-- **Effect v4** (`effect@4.0.0-beta.101`, `catalog:effect`) for typed errors, dependency injection, and service composition.
-- **`@effected/github-actions` ^0.4.1** — the runner: `Action.run`, `ActionRuntime.layer`, `ActionInput.*`, `ActionOutputs`, `ActionLogger`, `GitHubMarkdown`. Each service ships its own `makeTest`/`layerTest`; there is no separate testing subpath.
-- **`@effected/github` ^0.2.2** — the GitHub API: `GitHubClient`, `PullRequest`, `Repo`, and one `GitHubError` carrying a `kind` discriminant.
-- **`@savvy-web/github-action-builder` ^2.0.0** (rsbuild-based) configured via `action.config.ts`.
+- **Effect v4** (`effect@4.0.0-beta.107`, `catalog:effect`) for typed errors, dependency injection, and service composition. The catalog is supplied by the `@effected/pnpm-plugin-effect` config dependency in `pnpm-workspace.yaml`, not by a `catalogs:` block in this repo.
+- **`@effected/github-actions` ^0.6.0** — the runner: `Action.run`, `ActionRuntime.layer`, `ActionInput.*`, `ActionOutputs`, `ActionLogger`, `GitHubMarkdown`. Each service ships its own `makeTest`/`layerTest`; there is no separate testing subpath.
+- **`@effected/github` ^0.3.0** — the GitHub API: `GitHubClient`, `PullRequest`, `Repo`, and one `GitHubError` carrying a `kind` discriminant.
+- **`@savvy-web/github-action-builder` ^2.2.3** (rsbuild-based) configured via `action.config.ts`.
 - **`@effect/platform-node`** at catalog:effect — a required peer of `@effected/github-actions`, composed by `ActionRuntime.layer` rather than wired by hand. `FileSystem` imports from `effect` core.
-- **`@savvy-web/silk` ^3.0.0** release toolchain (changesets v3 engine).
-- **pnpm 11.13.0**, **Node 26.5.0** (`devEngines.runtime`); the action itself bundles to `runs.using: node24` (the latest supported by GitHub Actions runners today).
+- **`@savvy-web/silk` ^3.5.2** release toolchain (changesets v3 engine).
+- **pnpm 11.20.0**, **Node 26.5.1** (`devEngines.runtime`); the action itself bundles to `runs.using: node24` (the latest supported by GitHub Actions runners today).
 - **Biome 2.5.1** with strict rules.
 - **Vitest** with Effect test layers.
-- **Type checking:** TypeScript Native Preview (`tsgo --noEmit`).
+- **Type checking:** `tsc --noEmit` from **TypeScript 7** (the native compiler; the `tsgo` preview binary graduated into `typescript@7`'s `tsc` and is no longer installed).
 - **Direct dependencies:** Zero `@actions/*` packages — all GitHub Actions integration comes from `@effected/github-actions` and `@effected/github`.
 
 ## Build & Development Commands
@@ -139,9 +139,9 @@ pnpm lint                    # Check only
 pnpm lint:fix                # Apply safe fixes
 pnpm lint:fix:unsafe         # Apply all fixes
 
-# Type checking (use tsgo, not tsc)
+# Type checking (TypeScript 7 native tsc; there is no tsgo binary)
 pnpm typecheck               # Via turbo
-pnpm exec tsgo --noEmit      # Direct
+pnpm exec tsc --noEmit       # Direct
 
 # Markdown linting
 pnpm lint:md                 # Check only
