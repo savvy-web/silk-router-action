@@ -53,7 +53,7 @@ const RELEASE_DETECT_DELAY = "10 seconds";
  *
  * @internal
  */
-class ReleasePRNotVisibleYet extends Schema.TaggedErrorClass<ReleasePRNotVisibleYet>()("ReleasePRNotVisibleYet", {}) {}
+class ReleasePRNotVisibleYet extends Schema.TaggedError<ReleasePRNotVisibleYet>()("ReleasePRNotVisibleYet", {}) {}
 
 /** Truncate a commit message for the detection record. @internal */
 const truncate = (s: string, n = 100): string => (s.length > n ? `${s.substring(0, n)}...` : s.substring(0, n));
