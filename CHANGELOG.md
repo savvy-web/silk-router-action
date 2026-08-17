@@ -1,5 +1,33 @@
 # @savvy-web/workflow-control-action
 
+## 1.3.4
+
+### Dependencies
+
+* | Dependency               | Type       | Action  | From   | To     |                                                                              |
+  | ------------------------ | ---------- | ------- | ------ | ------ | ---------------------------------------------------------------------------- |
+  | @effected/github         | dependency | updated | ^0.4.1 | ^0.4.2 |                                                                              |
+  | @effected/github-actions | dependency | updated | ^0.6.1 | ^0.7.0 | [#198][#198] Thanks [@savvy-web-bot](https://github.com/apps/savvy-web-bot)! |
+
+- | Dependency               | Type       | Action  | From           | To           |                                                                              |
+  | ------------------------ | ---------- | ------- | -------------- | ------------ | ---------------------------------------------------------------------------- |
+  | @effect/platform-node    | dependency | updated | 4.0.0-beta.107 | 4.0.0-rc.109 |                                                                              |
+  | @effected/github         | dependency | updated | ^0.4.3         | ^0.5.0       |                                                                              |
+  | @effected/github-actions | dependency | updated | ^0.7.0         | ^0.8.0       |                                                                              |
+  | effect                   | dependency | updated | 4.0.0-beta.107 | 4.0.0-rc.109 | [#207][#207] Thanks [@savvy-web-bot](https://github.com/apps/savvy-web-bot)! |
+
+* | Dependency       | Type       | Action  | From   | To     |                                                                              |
+  | ---------------- | ---------- | ------- | ------ | ------ | ---------------------------------------------------------------------------- |
+  | @effected/github | dependency | updated | ^0.4.2 | ^0.4.3 | [#201][#201] Thanks [@savvy-web-bot](https://github.com/apps/savvy-web-bot)! |
+
+### Patch Changes
+
+[#198]: https://github.com/savvy-web/silk-router-action/pull/198
+
+[#201]: https://github.com/savvy-web/silk-router-action/pull/201
+
+[#207]: https://github.com/savvy-web/silk-router-action/pull/207
+
 ## 1.3.3
 
 ### Dependencies
