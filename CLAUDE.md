@@ -104,7 +104,7 @@ Load when adding an error type, changing a step's failure posture, or touching t
 
 ## Technical Stack
 
-- **Effect v4** (`effect@4.0.0-beta.107`, `catalog:effect`) for typed errors, dependency injection, and service composition. The catalog is supplied by the `@effected/pnpm-plugin-effect` config dependency in `pnpm-workspace.yaml`, not by a `catalogs:` block in this repo.
+- **Effect v4** (`effect@4.0.0-rc.109`, `catalog:effect`) for typed errors, dependency injection, and service composition. The catalog is supplied by the `@effected/pnpm-plugin-effect` config dependency in `pnpm-workspace.yaml`, not by a `catalogs:` block in this repo.
 - **`@effected/github-actions` ^0.6.0** — the runner: `Action.run`, `ActionRuntime.layer`, `ActionInput.*`, `ActionOutputs`, `ActionLogger`, `GitHubMarkdown`. Each service ships its own `makeTest`/`layerTest`; there is no separate testing subpath.
 - **`@effected/github` ^0.3.0** — the GitHub API: `GitHubClient`, `PullRequest`, `Repo`, and one `GitHubError` carrying a `kind` discriminant.
 - **`@savvy-web/github-action-builder` ^2.2.3** (rsbuild-based) configured via `action.config.ts`.
