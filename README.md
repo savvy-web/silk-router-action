@@ -157,7 +157,7 @@ jobs:
         uses: savvy-web/silk-runtime-action@v1
 
       - name: Run release
-        uses: savvy-web/silk-release-action@v4
+        uses: savvy-web/silk-release-action@v5
         with:
           phase: ${{ needs.control.outputs.phase }}
           app-client-id: ${{ vars.APP_CLIENT_ID }}
@@ -262,7 +262,7 @@ jobs:
         uses: savvy-web/silk-runtime-action@v1
 
       - name: Run release
-        uses: savvy-web/silk-release-action@v4
+        uses: savvy-web/silk-release-action@v5
         with:
           phase: ${{ needs.control.outputs.phase }}
           app-client-id: ${{ vars.APP_CLIENT_ID }}
@@ -350,7 +350,7 @@ jobs:
         uses: savvy-web/silk-runtime-action@v1
 
       - name: Run release
-        uses: savvy-web/silk-release-action@v4
+        uses: savvy-web/silk-release-action@v5
         with:
           phase: ${{ needs.control.outputs.phase }}
           app-client-id: ${{ vars.APP_CLIENT_ID }}
