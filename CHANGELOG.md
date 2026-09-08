@@ -1,5 +1,15 @@
 # @savvy-web/workflow-control-action
 
+## 1.3.12
+
+### Maintenance
+
+- Bumps effected kit to the latest version.
+
+### Thanks
+
+Thanks to [@spencerbeggs](https://github.com/spencerbeggs) for their contributions!
+
 ## 1.3.11
 
 ### Dependencies
