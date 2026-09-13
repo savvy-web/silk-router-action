@@ -11,13 +11,7 @@ point, a `program.ts` that is pure composition, one module per pipeline step
 under `steps/`, the input/output contracts as data under `schema/`, and exactly
 one rendering surface in `format.ts`.
 
-**Design documentation:**
-
-- Architecture and layer wiring → `@../.claude/design/silk-router-action/architecture.md`
-- Phase detection algorithm → `@../.claude/design/silk-router-action/phase-detection.md`
-- Error model → `@../.claude/design/silk-router-action/error-model.md`
-
-All three were rewritten for the ported structure.
+**Start at [`../okf/index.md`](../okf/index.md).** For the seams this module leans on, read [`kit-seams`](../okf/conventions/kit-seams.md), [`action-yml-single-source`](../okf/conventions/action-yml-single-source.md), and [`step-module-shape`](../okf/conventions/step-module-shape.md); for the failure model, [`failure-postures-per-step`](../okf/decisions/failure-postures-per-step.md), [`narrow-degradation-predicate`](../okf/decisions/narrow-degradation-predicate.md), and [`bounded-retry-on-release-prefixed-pushes`](../okf/decisions/bounded-retry-on-release-prefixed-pushes.md); for known traps, the [gotchas index](../okf/gotchas/index.md).
 
 ## Layout
 
@@ -52,49 +46,26 @@ promoted to `services/` only when a second step needs the same capability.
 
 ## Non-negotiables
 
-- **`action.yml` is the single source of input and output names and defaults.**
-  The tuples in `schema/` mirror it; they never re-declare it. The three-way
-  check is enforced by `__test__/unit/parity.test.ts` — **4 inputs, 10 outputs**.
-- **Read inputs through `ActionInput`, never a bare `Config.*`.** The runner
-  publishes `INPUT_<MANGLED>` names.
-- **⚠️ The mangling preserves hyphens.** `release-branch` becomes
-  `INPUT_RELEASE-BRANCH`, not `INPUT_RELEASE_BRANCH` — only *spaces* become
-  underscores. A test seeding the underscore spelling proves nothing.
-- **`Repo` is resolved per call**, never captured at layer construction —
-  capturing it makes `Repo.provide` silently do nothing.
-- **One emitter writes every output**, driven by iterating `OUTPUT_NAMES`.
+See [`kit-seams`](../okf/conventions/kit-seams.md) (input reads, per-call `Repo`
+resolution, the single emitter) and
+[`action-yml-single-source`](../okf/conventions/action-yml-single-source.md)
+(the 4-input/10-output parity contract). The hyphen-preserving mangling is
+[`input-mangling-preserves-hyphens`](../okf/gotchas/input-mangling-preserves-hyphens.md).
 
 ## Step conventions
 
-Each step module exports a result type, a tagged error **only when the step can
-actually fail**, an explicitly annotated requirement channel, and the step
-itself. Its failure posture is documented in its TSDoc:
-
-| Step | Posture |
-| --- | --- |
-| `detectPhase` | degrade-to-warning — an API failure falls back to commit-message detection; `E = never`. **Only** the five `GitHubError` kinds meaning "the API could not answer" degrade; `decode` and `alreadyExists` fall through to `Effect.orDie` and surface as defects. Widening that predicate would make this row a lie. |
-| `parseChangesets` | fail-the-job — `ChangesetParseError` propagates |
-| `writeSummary` | fail-the-job as a defect — preserved from the pre-port `Effect.orDie` |
+See [`step-module-shape`](../okf/conventions/step-module-shape.md) for the
+result-type/tagged-error/requirement-channel/TSDoc shape every step follows,
+and [`failure-postures-per-step`](../okf/decisions/failure-postures-per-step.md)
+and [`narrow-degradation-predicate`](../okf/decisions/narrow-degradation-predicate.md)
+for each step's posture.
 
 ## Logging
 
-`program.ts`'s local `step` helper wraps each step in
-`logger.group(name, logger.withStep(name, effect))` — a collapsible block, a
-buffer discarded on success, and one info line reporting the step happened.
-Warnings and errors are never buffered, so a long step still reports trouble
-while it runs.
-
-That is the legacy `Step.groupStep` composition verbatim: `group` + `withStep`.
-The port initially shipped `group` + `withBuffer`, which reproduced the block and
-the buffering but dropped the per-step success line, because `ActionLogger` had
-no summary emitter. `withStep` landed in `@effected/github-actions@0.5.0` and
-closed the gap.
-
-⚠️ **Nothing observable distinguishes `withStep` from `withBuffer` through the
-test double** — every wrapper there is a pass-through, so a suite asserting only
-outputs stays green either way. The regression is caught by asserting which
-member each step routes through, in `__test__/integration/program.int.test.ts`.
-Keep that test; it is the only thing standing between this and a silent revert.
+See [`step-module-shape`](../okf/conventions/step-module-shape.md) for the
+`group` + `withStep` wrapping and why it replaced `withBuffer`, and
+[`withstep-invisible-through-double`](../okf/gotchas/withstep-invisible-through-double.md)
+for why the test double can't tell the two apart.
 
 ## Code style
 
@@ -104,19 +75,7 @@ explicit return types on exports.
 
 ## The release-detection retry
 
-`detect-phase` retries the PR-association lookup when the head commit message
-starts with `release-prefix`, to absorb GitHub's propagation lag. **Three retries,
-ten seconds apart; an empty prefix disables it entirely.**
-
-Absence of the association is modelled as an internal tagged failure —
-`ReleasePRNotVisibleYet` — purely so `Effect.retry` has something on the error
-channel to act on, since retry cannot see an empty success. It is caught at the
-boundary of the retry pipeline and **never** escapes: `detectPhase` keeps
-`E = never`, and the tag is deliberately absent from the `GitHubError` degrade
-predicate, where it would short-circuit the very retry it drives.
-
-⚠️ The "ten seconds apart" half of that contract is easy to lose. A retry test
-that advances a generous virtual budget and asserts only the call *count* passes
-whatever the spacing is; `__test__/unit/steps/detect-phase.test.ts` has one case
-that advances deliberately short and asserts progress, and that is the only thing
-pinning the interval.
+See [`bounded-retry-on-release-prefixed-pushes`](../okf/decisions/bounded-retry-on-release-prefixed-pushes.md)
+for the retry gate and the `ReleasePRNotVisibleYet` sentinel, and
+[`retry-count-does-not-pin-interval`](../okf/gotchas/retry-count-does-not-pin-interval.md)
+for why a call-count assertion alone doesn't pin the ten-second spacing.

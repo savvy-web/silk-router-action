@@ -75,20 +75,7 @@ Workflows use conditionals like: `if: steps.control.outputs.should_continue == '
 
 Single `main.ts` entry — NO `pre.ts` / `post.ts`. The action runs one Effect program in one phase. Layout:
 
-**For full architectural details:**
-→ `@./.claude/design/silk-router-action/architecture.md`
-
-Load when making structural changes, adding services, or modifying the layer wiring.
-
-**For phase detection algorithm:**
-→ `@./.claude/design/silk-router-action/phase-detection.md`
-
-Load when working on phase detection logic, adding new phases, or debugging incorrect phase assignments.
-
-**For the error model — failure postures, the narrow degradation predicate, the retry sentinel:**
-→ `@./.claude/design/silk-router-action/error-model.md`
-
-Load when adding an error type, changing a step's failure posture, or touching the degradation predicate in `detect-phase`.
+**Start at [`okf/index.md`](okf/index.md).** For the project shape and boundaries, read [`okf/project.md`](okf/project.md) and [`okf/modules/silk-router-action.md`](okf/modules/silk-router-action.md); for the input/output contract, [`okf/interfaces/action-contract.md`](okf/interfaces/action-contract.md); for the design rationale behind a structural change, the [decisions index](okf/decisions/index.md); for step-by-step procedures, the [runbooks index](okf/runbooks/index.md).
 
 - `src/main.ts` — the entry point: a program import plus one `Action.run` call guarded on `GITHUB_ACTIONS`, so the module stays importable in tests.
 - `src/program.ts` — pure composition: read inputs, run steps, fold outputs, report.
@@ -153,61 +140,17 @@ pnpm validate
 
 ## Dogfooding First-Party Dependencies
 
-We author every dependency in the table below, so a bug or missing API in one can be fixed **in its own repo** and dogfooded through this action before publishing. The action is a **bundled** artifact — `pnpm build` inlines every dependency into `dist/main.js` — so once a local library build is linked and this repo is rebuilt, the change is baked into the committed `dist`. The integration runs the committed `dist`, **not** `node_modules`.
-
-| Package | Repo | Local checkout |
-| --- | --- | --- |
-| `@savvy-web/github-action-builder` | `savvy-web/github-action-builder` | `../github-action-builder` |
-
-It is a direct-only dependency with no transitive duplication path, so `pnpm link ../<repo>` is the linking mechanism. The `pnpm-workspace.yaml` `overrides` mechanism is not needed here unless a future first-party transitive dependency is introduced.
-
-**Procedure:**
-
-1. **Build the library:** in its repo run `pnpm ci:build` (produces `dist/dev` link target).
-2. **Link it:** `pnpm link ../<repo>` here, then `pnpm install`.
-3. **Keep the declared range correct** in this repo's `package.json` for the eventual unlinked install.
-4. **Iterate:** edit library source → `pnpm ci:build` there → `pnpm typecheck` + `pnpm test` here → `pnpm build` here → commit (`src` + `dist` + changeset) → push `dev`.
-5. **Library edits ship separately:** they land on the library's own branch and release with its next published version.
-6. **Final step, only AFTER the dogfooded version publishes:** remove the link, pin the published range, `pnpm install`.
+See [`okf/runbooks/dogfood-a-first-party-dependency.md`](okf/runbooks/dogfood-a-first-party-dependency.md) for the full link → iterate → unlink procedure.
 
 Commits must be GPG-signed with the GitHub-verified key for `C. Spencer Beggs <spencer@savvyweb.systems>` or the signature ruleset rejects them.
 
 ## Development & Release Cycle
 
-### The `dev` branch convention
-
-All in-progress feature work lands on a long-lived **`dev`** branch, never directly on `main`. `main` always reflects the last released state.
-
-The shared release workflow at `savvy-web/.github/.github/workflows/release.yml` has a matching **`dev` branch**. This repo's own `release.yml` pins `@dev` so it exercises in-progress workflow changes before they reach `main`.
-
-### Flow: `dev` → `main` → release
-
-1. Feature work accumulates on `dev`; merge it into `main` when ready.
-2. The push to `main` triggers **Phase 1** — changeset detection creates/updates `changeset-release/main` and the release PR.
-3. Pushes to the release branch trigger **Phase 2** validation (build, publish dry-runs, release-notes preview, sticky comment).
-4. Merging the release PR triggers **Phase 3** — publishing, Git tags, and a published GitHub release.
-5. The published release fires `release-sync.yml`, which closes the loop by resetting `dev` back to `main`.
-
-### `release-sync.yml` — post-release housekeeping
-
-Triggered by `release: [published]` (and `workflow_dispatch` with a `tag` input + `dry-run` for rehearsal). Runs as the GitHub App bot so its pushes can bypass protection and won't recurse (no workflow triggers on tag/`dev` pushes). On a **stable SemVer 2.0.0 release `>= 1.0.0`** (bare `MAJOR.MINOR.PATCH` — no leading `v`, no `-prerelease`, no `+build`) it:
-
-1. Moves (or creates) the **`v<major>`** alias tag (e.g. `v1`) at the released commit.
-2. **Hard-resets `dev` to `main` HEAD** — a genuine clobber, so any `dev` commit not yet in `main` is discarded. This is safe by design: `dev` work always lands in `main` before a release.
-
-Each push is guarded: if the remote `v<major>` tag or `dev` already points at its target commit, that push is skipped. Sub-`1.0.0`, prerelease, build-metadata, and non-SemVer tags are ignored (no-op).
+See [`okf/runbooks/release-cycle.md`](okf/runbooks/release-cycle.md) for the full `dev` → `main` → release flow and post-release housekeeping. Two corrections to keep in mind if you've seen an older description of this: `.github/workflows/release.yml` pins the shared workflow at `@main`, not `@dev`; and the post-release housekeeping lives in `.github/workflows/branch-sync.yml` (jobs `sync-dev`, `major-tag`, `promote`) rather than a `release-sync.yml`, which does not exist. `sync-dev` is not an unconditional hard reset — it resets `dev` to `main` only when `git merge-tree` shows `dev` holds nothing `main` lacks, otherwise it rebases `dev` onto `main`, aborting untouched on conflict.
 
 ## Workflow Phase Detection Logic
 
-The core detection algorithm:
-
-1. **Phase 3a (close-issues):** `pull_request` event where release PR was merged.
-2. **Phase 3 (publishing):** Push to main from a merged release PR.
-3. **Phase 2 (validation):** Push to release branch (or open PR from release → main).
-4. **Phase 1 (branch-management):** Push to main, non-release commit.
-5. **none:** Any other scenario.
-
-Release commits are detected primarily via GitHub API query for PRs associated with the commit; falls back to commit-message patterns (e.g. "chore: version packages", merge commit patterns) on API failure. When the head commit message on the target branch starts with `release-prefix` (default `release:`) but no merged release PR is yet associated with the commit, detection is retried up to 3 times, 10 seconds apart, to absorb GitHub's PR-association propagation lag before falling back to branch-management.
+Phases are evaluated in strict priority order (close-issues, then publishing, then validation, then branch-management, then none) because two phases can match the same event — see [`okf/decisions/priority-ordered-phase-detection.md`](okf/decisions/priority-ordered-phase-detection.md). Release-commit detection retries the PR-association lookup up to 3 times, 10 seconds apart, but only when the head commit message starts with `release-prefix`, to absorb GitHub's PR-association propagation lag — see [`okf/decisions/bounded-retry-on-release-prefixed-pushes.md`](okf/decisions/bounded-retry-on-release-prefixed-pushes.md).
 
 ## Code Style
 
@@ -243,9 +186,12 @@ Biome enforces strict rules:
 │   └── utils/                 # doubles — helper code, never tests
 ├── dist/
 │   └── main.js                # compiled bundle
+├── okf/                        # okfit knowledge bundle — start at okf/index.md
 ├── .github/
 │   ├── actions/local/         # mirrored bundle for local testing
 │   └── workflows/             # CI workflows
+├── .config/
+│   └── okfit.toml             # okfit bundle config
 ├── action.config.ts
 ├── action.yml
 └── package.json
