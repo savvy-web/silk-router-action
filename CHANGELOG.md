@@ -1,5 +1,17 @@
 # @savvy-web/workflow-control-action
 
+## 1.3.13
+
+### Maintenance
+
+- Upgrade core kit. [#306][#306]
+
+### Thanks
+
+Thanks to [@spencerbeggs](https://github.com/spencerbeggs) for their contributions!
+
+[#306]: https://github.com/savvy-web/silk-router-action/pull/306
+
 ## 1.3.12
 
 ### Maintenance
@@ -162,13 +174,17 @@ Thanks to [@savvy-web-bot](https://github.com/apps/savvy-web-bot) for their cont
 ### Documentation
 
 - Corrects the stale dependency versions in the technical-stack section, notes
-  that the `catalog:effect` entries come from the `@effected/pnpm-plugin-effect`&#10;config dependency rather than a local `catalogs:` block, and replaces the&#10;`tsgo --noEmit` type-check instructions with `tsc --noEmit` — the native
+  that the `catalog:effect` entries come from the `@effected/pnpm-plugin-effect`
+  config dependency rather than a local `catalogs:` block, and replaces the
+  `tsgo --noEmit` type-check instructions with `tsc --noEmit` — the native
   preview binary graduated into TypeScript 7 and is no longer installed. [#185][#185]
 
 ### Refactoring
 
-- Renames the two typed-error declarations from `Schema.TaggedErrorClass` to&#10;`Schema.TaggedError`, which `beta.107` restored as the canonical name. The
-  curried shape is unchanged, so `ChangesetParseError` and the internal&#10;`ReleasePRNotVisibleYet` keep their existing fields and behavior.
+- Renames the two typed-error declarations from `Schema.TaggedErrorClass` to
+  `Schema.TaggedError`, which `beta.107` restored as the canonical name. The
+  curried shape is unchanged, so `ChangesetParseError` and the internal
+  `ReleasePRNotVisibleYet` keep their existing fields and behavior.
 
 ### Dependencies
 
@@ -183,7 +199,8 @@ Thanks to [@savvy-web-bot](https://github.com/apps/savvy-web-bot) for their cont
 | @savvy-web/silk | devDependency | updated | 3.4.0 | 3.5.2 |
 | @vitest-agent/plugin | devDependency | updated | 2.0.13 | 2.0.16 |
 
-- Advances the action onto the Effect `4.0.0-beta.107` wave, adopting the&#10;`@effected` releases rebuilt against it. The bundled `dist/main.js` now carries
+- Advances the action onto the Effect `4.0.0-beta.107` wave, adopting the
+  `@effected` releases rebuilt against it. The bundled `dist/main.js` now carries
   a single, coherent Effect copy.
 
 ### Patch Changes
