@@ -1,5 +1,22 @@
 # @savvy-web/workflow-control-action
 
+## 1.3.17
+
+### Dependencies
+
+| Dependency | Type | Action | From | To |
+| --- | --- | --- | --- | --- |
+| @effected/github | dependency | updated | ^0.10.1 | ^0.10.2 |
+| @effected/github-actions | dependency | updated | ^0.13.2 | ^0.13.3 |
+
+[#334][#334]
+
+### Thanks
+
+Thanks to [@savvy-web-bot](https://github.com/apps/savvy-web-bot) for their contributions!
+
+[#334]: https://github.com/savvy-web/silk-router-action/pull/334
+
 ## 1.3.16
 
 ### Dependencies
