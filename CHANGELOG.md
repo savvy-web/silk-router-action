@@ -1,5 +1,17 @@
 # @savvy-web/workflow-control-action
 
+## 1.3.25
+
+### Features
+
+- Bumps to latest effected kit [#372][#372]
+
+### Thanks
+
+Thanks to [@spencerbeggs](https://github.com/spencerbeggs) for their contributions!
+
+[#372]: https://github.com/savvy-web/silk-router-action/pull/372
+
 ## 1.3.24
 
 ### Dependencies
