@@ -11,14 +11,16 @@ tags:
   - observability
 generated:
   by: okfit/claude-code
-  at: 2026-09-13T20:08:30Z
-  body_sha256: e4a16b59a23a5f522cd0af2b1f923f741afc8ae45cfca35b1d4de0708405a229
+  at: 2026-10-26T17:04:31Z
 sources:
   - id: detect-phase
     resource: ../../src/steps/detect-phase.ts
 verified:
   - by: human:spencer
     at: 2026-09-13T20:11:56Z
+integrity:
+  generated:
+    body: 0165e23cec95b6ba
 ---
 
 # Only five of seven GitHubError kinds degrade the release-commit query
@@ -26,7 +28,7 @@ verified:
 ## Context
 
 `detectPhase`'s[^detect-phase] PR-association lookup
-(`pullRequests.listAssociatedWithCommit`, `detect-phase.ts:166-183`) is
+(`pullRequests.listAssociatedWithCommit`, `detect-phase.ts:166-189`) is
 wrapped in `Effect.catchIf` against a `GitHubError.hasKind` predicate before
 falling through to `Effect.orDie`.
 `GitHubError` carries seven possible `kind` values:
@@ -87,6 +89,11 @@ in the predicate would document a code path that can never fire.
   before it is added to the predicate — the default for an unclassified kind
   is to fall through to `Effect.orDie`, not to be swept in by widening the
   `hasKind` call.
+- Since `@effected/github` 0.25, `listAssociatedWithCommit` can also fail
+  with `GitHubGraphQLError`, but only when called with `mergeCommits: true`.
+  This call does not pass it, so the predicate narrows on
+  `_tag === "GitHubError"` first and leaves any GraphQL error to
+  `Effect.orDie` as a defect.
 - The predicate is the one place this repository's "loud failure over a
   plausible wrong answer" stance is enforced at the type level; a code review
   on `detect-phase.ts` that touches line 176 should read this decision before
