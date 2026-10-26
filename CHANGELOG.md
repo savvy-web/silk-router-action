@@ -1,5 +1,28 @@
 # @savvy-web/workflow-control-action
 
+## 1.3.37
+
+### Dependencies
+
+| Dependency | Type | Action | From | To |
+| --- | --- | --- | --- | --- |
+| @effected/pnpm-plugin-effect | config | updated | 0.18.4 | 0.18.7 |
+| @savvy-web/pnpm-plugin-silk | config | updated | 0.49.1 | 0.51.1 |
+| @effected/github | dependency | updated | ^0.24.0 | ^0.25.1 |
+| @effected/github-actions | dependency | updated | ^0.27.0 | ^0.28.1 |
+| @okfit/plugin | devDependency | updated | ^0.5.23 | ^0.5.25 |
+| @savvy-web/github-action-builder | devDependency | updated | ^2.4.18 | ^2.4.21 |
+| @savvy-web/silk | devDependency | updated | ^4.4.1 | ^4.5.2 |
+| @vitest-agent/plugin | devDependency | updated | ^5.4.9 | ^5.6.2 |
+
+[#446][#446]
+
+### Thanks
+
+Thanks to [@spencerbeggs](https://github.com/spencerbeggs) for their contributions!
+
+[#446]: https://github.com/savvy-web/silk-router-action/pull/446
+
 ## 1.3.36
 
 ### Dependencies
@@ -492,8 +515,6 @@ Thanks to [@savvy-web-bot](https://github.com/apps/savvy-web-bot) for their cont
   | --- | --- | --- | --- | --- | --- |
   | @effected/github-actions | dependency | updated | ^0.9.1 | ^0.9.2 | [#220][#220] Thanks [@savvy-web-bot](https://github.com/apps/savvy-web-bot)! |
 
-### Patch Changes
-
 [#220]: https://github.com/savvy-web/silk-router-action/pull/220
 
 ## 1.3.6
@@ -505,8 +526,6 @@ Thanks to [@savvy-web-bot](https://github.com/apps/savvy-web-bot) for their cont
   | @effected/github | dependency | updated | ^0.6.0 | ^0.7.0 |  |
   | @effected/github-actions | dependency | updated | ^0.9.0 | ^0.9.1 | [#214][#214] Thanks [@savvy-web-bot](https://github.com/apps/savvy-web-bot)! |
 
-### Patch Changes
-
 [#214]: https://github.com/savvy-web/silk-router-action/pull/214
 
 ## 1.3.5
@@ -517,8 +536,6 @@ Thanks to [@savvy-web-bot](https://github.com/apps/savvy-web-bot) for their cont
   | --- | --- | --- | --- | --- | --- |
   | @effected/github | dependency | updated | ^0.5.0 | ^0.6.0 |  |
   | @effected/github-actions | dependency | updated | ^0.8.0 | ^0.9.0 | [#210][#210] Thanks [@savvy-web-bot](https://github.com/apps/savvy-web-bot)! |
-
-### Patch Changes
 
 [#210]: https://github.com/savvy-web/silk-router-action/pull/210
 
@@ -542,8 +559,6 @@ Thanks to [@savvy-web-bot](https://github.com/apps/savvy-web-bot) for their cont
   | --- | --- | --- | --- | --- | --- |
   | @effected/github | dependency | updated | ^0.4.2 | ^0.4.3 | [#201][#201] Thanks [@savvy-web-bot](https://github.com/apps/savvy-web-bot)! |
 
-### Patch Changes
-
 [#198]: https://github.com/savvy-web/silk-router-action/pull/198
 
 [#201]: https://github.com/savvy-web/silk-router-action/pull/201
@@ -558,8 +573,6 @@ Thanks to [@savvy-web-bot](https://github.com/apps/savvy-web-bot) for their cont
   | --- | --- | --- | --- | --- | --- |
   | @effected/github | dependency | updated | ^0.3.0 | ^0.4.1 |  |
   | @effected/github-actions | dependency | updated | ^0.6.0 | ^0.6.1 | [#193][#193] Thanks [@savvy-web-bot](https://github.com/apps/savvy-web-bot)! |
-
-### Patch Changes
 
 [#193]: https://github.com/savvy-web/silk-router-action/pull/193
 
@@ -612,8 +625,6 @@ Thanks to [@spencerbeggs](https://github.com/spencerbeggs) for their contributio
   | @effected/github | dependency | updated | ^0.2.2 | ^0.2.3 |  |
   | @effected/github-actions | dependency | updated | ^0.5.0 | ^0.5.1 | [#182][#182] Thanks [@savvy-web-bot](https://github.com/apps/savvy-web-bot)! |
 
-### Patch Changes
-
 [#182]: https://github.com/savvy-web/silk-router-action/pull/182
 
 ## 1.3.0
@@ -655,8 +666,6 @@ Thanks to [@spencerbeggs](https://github.com/spencerbeggs) for their contributio
   | @effected/github-actions | dependency | added | — | ^0.5.0 |  |
   | @effected/github | dependency | added | — | ^0.2.2 | [#171][#171] Thanks [@spencerbeggs](https://github.com/spencerbeggs)! |
 
-### Minor Changes
-
 [#171]: https://github.com/savvy-web/silk-router-action/pull/171
 
 ## 1.2.3
@@ -666,8 +675,6 @@ Thanks to [@spencerbeggs](https://github.com/spencerbeggs) for their contributio
 - | Dependency | Type | Action | From | To |  |
   | --- | --- | --- | --- | --- | --- |
   | @savvy-web/github-action-effects | dependency | updated | ^3.0.5 | ^3.1.0 | [#157][#157] Thanks [@savvy-web-bot](https://github.com/apps/savvy-web-bot)! |
-
-### Patch Changes
 
 [#157]: https://github.com/savvy-web/silk-router-action/pull/157
 
@@ -680,8 +687,6 @@ Thanks to [@spencerbeggs](https://github.com/spencerbeggs) for their contributio
   | @effect/platform-node | dependency | updated | 4.0.0-beta.99 | 4.0.0-beta.101 |  |
   | @savvy-web/github-action-effects | dependency | updated | ^3.0.4 | ^3.0.5 |  |
   | effect | dependency | updated | 4.0.0-beta.99 | 4.0.0-beta.101 | [#154][#154] Thanks [@savvy-web-bot](https://github.com/apps/savvy-web-bot)! |
-
-### Patch Changes
 
 [#154]: https://github.com/savvy-web/silk-router-action/pull/154
 
@@ -697,8 +702,6 @@ Thanks to [@spencerbeggs](https://github.com/spencerbeggs) for their contributio
   | --- | --- | --- | --- | --- | --- |
   | @effect/platform-node | dependency | updated | 4.0.0-beta.98 | 4.0.0-beta.99 |  |
   | effect | dependency | updated | 4.0.0-beta.98 | 4.0.0-beta.99 | [#146][#146] Thanks [@savvy-web-bot](https://github.com/apps/savvy-web-bot)! |
-
-### Patch Changes
 
 [#143]: https://github.com/savvy-web/silk-router-action/pull/143
 
