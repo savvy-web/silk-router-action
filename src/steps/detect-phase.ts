@@ -172,12 +172,18 @@ export const detectPhase = (
 					// response did not match the kit's schema — a bug here or in the
 					// kit, not a condition to paper over. Both fall through to `orDie`
 					// below and surface as defects rather than becoming a silent
-					// commit-message guess.
-					Effect.catchIf(GitHubError.hasKind("transport", "rateLimited", "notFound", "rejected", "unauthorized"), () =>
-						Effect.gen(function* () {
-							yield* Effect.logWarning("PR-association API failed; falling back to commit-message detection");
-							return undefined;
-						}),
+					// commit-message guess. `GitHubGraphQLError` is reachable only with
+					// `mergeCommits: true`, which this call does not pass, so it too is
+					// left to `orDie`.
+					Effect.catchIf(
+						(error) =>
+							error._tag === "GitHubError" &&
+							GitHubError.hasKind("transport", "rateLimited", "notFound", "rejected", "unauthorized")(error),
+						() =>
+							Effect.gen(function* () {
+								yield* Effect.logWarning("PR-association API failed; falling back to commit-message detection");
+								return undefined;
+							}),
 					),
 					Effect.orDie,
 				),
