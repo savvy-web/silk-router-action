@@ -1,5 +1,28 @@
 # @savvy-web/workflow-control-action
 
+## 1.3.40
+
+### Bug Fixes
+
+- A `workflow_dispatch` on the target branch now runs release-commit detection, so a manual dispatch at a merged release commit resolves to the `publishing` phase instead of `branch-management` (#384). [#458][#458]
+
+### Dependencies
+
+| Dependency | Type | Action | From | To |
+| --- | --- | --- | --- | --- |
+| @effect/platform-node | dependency | updated | ^4.0.6 | ~4.1.1 |
+| @effected/github | dependency | updated | ^0.25.1 | ^0.27.0 |
+| @effected/github-actions | dependency | updated | ^0.28.2 | ^0.30.0 |
+| effect | dependency | updated | ^4.0.6 | ~4.1.1 |
+
+[#458][#458]
+
+### Thanks
+
+Thanks to [@spencerbeggs](https://github.com/spencerbeggs) for their contributions!
+
+[#458]: https://github.com/savvy-web/silk-router-action/pull/458
+
 ## 1.3.39
 
 ### Dependencies
