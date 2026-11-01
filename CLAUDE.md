@@ -91,14 +91,14 @@ Single `main.ts` entry — NO `pre.ts` / `post.ts`. The action runs one Effect p
 
 ## Technical Stack
 
-- **Effect v4** (`effect@4.0.0-rc.109`, `catalog:effect`) for typed errors, dependency injection, and service composition. The catalog is supplied by the `@effected/pnpm-plugin-effect` config dependency in `pnpm-workspace.yaml`, not by a `catalogs:` block in this repo.
-- **`@effected/github-actions` ^0.6.0** — the runner: `Action.run`, `ActionRuntime.layer`, `ActionInput.*`, `ActionOutputs`, `ActionLogger`, `GitHubMarkdown`. Each service ships its own `makeTest`/`layerTest`; there is no separate testing subpath.
-- **`@effected/github` ^0.3.0** — the GitHub API: `GitHubClient`, `PullRequest`, `Repo`, and one `GitHubError` carrying a `kind` discriminant.
-- **`@savvy-web/github-action-builder` ^2.2.3** (rsbuild-based) configured via `action.config.ts`.
-- **`@effect/platform-node`** at catalog:effect — a required peer of `@effected/github-actions`, composed by `ActionRuntime.layer` rather than wired by hand. `FileSystem` imports from `effect` core.
-- **`@savvy-web/silk` ^3.5.2** release toolchain (changesets v3 engine).
-- **pnpm 11.20.0**, **Node 26.5.1** (`devEngines.runtime`); the action itself bundles to `runs.using: node24` (the latest supported by GitHub Actions runners today).
-- **Biome 2.5.1** with strict rules.
+- **Effect v4** (`effect@4.1.1`, `catalog:effected`) for typed errors, dependency injection, and service composition. The single `effected` catalog (Effect family held to `~4.1.1`, plus every `@effected/*` package) is supplied by the `@effected/pnpm-plugin-effected` config dependency in `pnpm-workspace.yaml`, not by a `catalogs:` block in this repo. Never hand-edit those ranges; bump the plugin.
+- **`@effected/github-actions` 0.30.x** (`catalog:effected`) — the runner: `Action.run`, `ActionRuntime.layer`, `ActionInput.*`, `ActionOutputs`, `ActionLogger`, `GitHubMarkdown`. `ActionRuntime.layer` also provides the Effect 4.1 crypto services (`Digest`, `Mac`, `SecureRandom`) from `NodeCrypto`. Each service ships its own `makeTest`/`layerTest`; there is no separate testing subpath.
+- **`@effected/github` 0.27.x** (`catalog:effected`) — the GitHub API: `GitHubClient`, `PullRequest`, `Repo`, and one `GitHubError` carrying a `kind` discriminant.
+- **`@savvy-web/github-action-builder` ^2.4.24** (rsbuild-based) configured via `action.config.ts`.
+- **`@effect/platform-node`** at `catalog:effected` — a required peer of `@effected/github-actions`, composed by `ActionRuntime.layer` rather than wired by hand. `FileSystem` imports from `effect` core.
+- **`@savvy-web/silk` ^4.5.5** release toolchain (changesets v3 engine).
+- **pnpm 12.16.1**, **Node 26.12.1** (`devEngines.runtime`); the action itself bundles to `runs.using: node24` (the latest supported by GitHub Actions runners today).
+- **Biome 2.6.4** with strict rules.
 - **Vitest** with Effect test layers.
 - **Type checking:** `tsc --noEmit` from **TypeScript 7** (the native compiler; the `tsgo` preview binary graduated into `typescript@7`'s `tsc` and is no longer installed).
 - **Direct dependencies:** Zero `@actions/*` packages — all GitHub Actions integration comes from `@effected/github-actions` and `@effected/github`.
