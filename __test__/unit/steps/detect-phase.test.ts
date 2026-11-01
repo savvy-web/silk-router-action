@@ -429,21 +429,47 @@ describe("detectPhase — record fields", () => {
 		expect(result.phase).not.toBe("close-issues");
 	});
 
-	it("returns branch-management for a workflow_dispatch on the target branch", async () => {
-		const result = await detect({
-			env: { GITHUB_REF: "refs/heads/main", GITHUB_EVENT_NAME: "workflow_dispatch" },
-		});
-		expect(result.phase).toBe("branch-management");
+	const dispatch = { GITHUB_REF: "refs/heads/main", GITHUB_EVENT_NAME: "workflow_dispatch", GITHUB_SHA: "abc" };
+
+	it("resolves a workflow_dispatch on main at a merged release PR commit to publishing", async () => {
+		const result = await detect({ env: dispatch, associated: [prInfo({ number: 88 })] });
+		expect(result.phase).toBe("publishing");
+		expect(result.isReleaseCommit).toBe(true);
+		expect(result.mergedReleasePRNumber).toBe(88);
 	});
 
-	it("does not query the API for a non-push event on the target branch", async () => {
+	it("keeps a workflow_dispatch on main at an ordinary commit as branch-management", async () => {
+		const result = await detect({ env: dispatch, associated: [] });
+		expect(result.phase).toBe("branch-management");
+		expect(result.isReleaseCommit).toBe(false);
+	});
+
+	it("looks the PR association up exactly once for a workflow_dispatch, with no retry delay", async () => {
+		let calls = 0;
+		const layer = Layer.mergeAll(
+			actionEnvironmentTest(dispatch, {}),
+			PullRequest.layerTest({
+				listAssociatedWithCommit: () =>
+					Effect.sync(() => {
+						calls += 1;
+						return [];
+					}),
+			}),
+			Repo.layer(RepoRef.make({ owner: "acme", repo: "example" })),
+			Logger.layer([]),
+		);
+		await Effect.runPromise(underTestClock(detectPhase({ inputs }).pipe(Effect.provide(layer))));
+		expect(calls).toBe(1);
+	});
+
+	it("does not query the API for an event that is neither push nor workflow_dispatch on the target branch", async () => {
 		// `listAssociatedWithCommit` is unstubbed here, so it dies if called —
 		// which is the assertion.
 		const result = await Effect.runPromise(
 			detectPhase({ inputs }).pipe(
 				Effect.provide(
 					Layer.mergeAll(
-						actionEnvironmentTest({ GITHUB_REF: "refs/heads/main", GITHUB_EVENT_NAME: "workflow_dispatch" }, {}),
+						actionEnvironmentTest({ GITHUB_REF: "refs/heads/main", GITHUB_EVENT_NAME: "schedule" }, {}),
 						PullRequest.layerTest(),
 						Repo.layer(RepoRef.make({ owner: "acme", repo: "example" })),
 					),

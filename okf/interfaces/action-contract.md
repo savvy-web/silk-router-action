@@ -7,8 +7,7 @@ kind: runtime
 resource: ../../action.yml
 generated:
   by: okfit/claude-code
-  at: 2026-09-13T20:08:30Z
-  body_sha256: 4e1e97d7bfded0319a9dd13a785c17503a191b107e7811707bbe3a7aa13286e1
+  at: 2026-11-01T18:56:31Z
 sources:
   - id: action-yml
     resource: ../../action.yml
@@ -18,6 +17,9 @@ sources:
     resource: ../../src/program.ts
   - id: outputs-ts
     resource: ../../src/schema/outputs.ts
+integrity:
+  generated:
+    body: 64598a9b8cb45a57
 ---
 
 # Action contract
@@ -66,7 +68,7 @@ Five phase values, each with a distinct trigger[^action-yml]:
 | --- | --- |
 | `branch-management` | Push to the target branch, not a release commit — create or update the release branch |
 | `validation` | Push to the release branch, or an open PR from the release branch to the target branch — run build, test, lint |
-| `publishing` | A push to the target branch that is a merged release commit — publish packages |
+| `publishing` | A push (or manual `workflow_dispatch`) on the target branch at a merged release commit — publish packages |
 | `close-issues` | A `pull_request` event where the release PR was merged — close linked issues |
 | `none` | Any other scenario — no action needed |
 

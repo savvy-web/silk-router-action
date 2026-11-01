@@ -94,6 +94,14 @@ interface PayloadSubset {
  * Determine which release-pipeline phase this workflow run belongs to.
  *
  * @remarks
+ * **Release-commit gate.** Release-commit detection (the PR-association lookup
+ * and the commit-message fallback) runs on the target branch for a `push` **or**
+ * a `workflow_dispatch` event. The dispatch case lets a maintainer recover when
+ * GitHub drops the push event for a release-PR merge. A dispatch carries no
+ * `head_commit`, so its commit message is empty and the release-prefix retry is
+ * never scheduled: the lookup runs exactly once. Every other event on the target
+ * branch resolves to `branch-management` without querying the API.
+ *
  * **Failure posture: degrade-to-warning.** This step cannot fail the job. A
  * GitHub API failure falls back to commit-message detection and the run
  * continues, which is why the error channel is `never` rather than a tagged
@@ -159,7 +167,7 @@ export const detectPhase = (
 		let isReleaseCommit = false;
 		let mergedReleasePRNumber: number | undefined;
 
-		if (isMainBranch && github.eventName === "push") {
+		if (isMainBranch && (github.eventName === "push" || github.eventName === "workflow_dispatch")) {
 			// `Effect.suspend` so every retry re-issues the call rather than
 			// replaying a cached result.
 			const findMergedReleasePR = Effect.suspend(() =>

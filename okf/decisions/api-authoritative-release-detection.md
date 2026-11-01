@@ -6,18 +6,20 @@ status: stable
 tags: [architecture, ci]
 generated:
   by: okfit/claude-code
-  at: 2026-09-13T20:08:30Z
-  body_sha256: 5eb646c2b6971c86934b7fd962d78be0934a1344d9ae4517fa9eded2c34655cf
+  at: 2026-11-01T18:56:31Z
 verified:
   - by: human:spencer
     at: 2026-09-13T20:11:54Z
+integrity:
+  generated:
+    body: 7a806831a5c3ae35
 ---
 
 # API-authoritative release detection
 
 ## Context
 
-On a `push` event to the target branch, `detectPhase`
+On a `push` or `workflow_dispatch` event to the target branch, `detectPhase`
 (`../../src/steps/detect-phase.ts:162-225`) must decide whether the pushed
 commit came from a merged release PR (`publishing`) or not
 (`branch-management`). Two strategies are available: query GitHub's API for
