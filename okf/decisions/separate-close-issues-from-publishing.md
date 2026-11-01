@@ -12,8 +12,7 @@ tags:
   - ci
 generated:
   by: okfit/claude-code
-  at: 2026-09-13T20:08:30Z
-  body_sha256: 8eab39914a67b2357c0cf99ad2dc1e95223ce97b67d3c2b8288e4b67ca11f19f
+  at: 2026-11-01T18:56:31Z
 sources:
   - id: detect-phase
     resource: ../../src/steps/detect-phase.ts
@@ -22,6 +21,9 @@ sources:
 verified:
   - by: human:spencer
     at: 2026-09-13T20:11:56Z
+integrity:
+  generated:
+    body: 975c896060038fa1
 ---
 
 # Close-issues is a separate phase from publishing
@@ -39,7 +41,7 @@ distinguishes them by which GitHub event carried the trigger:
   (`isReleasePRMerged`, lines 140–148). The `pull_request` payload carries the
   PR's `number` directly, which is why `mergedReleasePRNumber` is always
   populated on this branch.
-- `publishing` fires on a `push` event to the target branch whose commit is
+- `publishing` fires on a `push` (or manual `workflow_dispatch`) event to the target branch whose commit is
   confirmed (via the PR-association query, or its commit-message fallback) to
   be a release commit (lines 227–238). A push event carries no PR metadata at
   all — `mergedReleasePRNumber` is only set here when the PR-association query

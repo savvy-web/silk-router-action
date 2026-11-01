@@ -6,11 +6,13 @@ status: stable
 tags: [architecture]
 generated:
   by: okfit/claude-code
-  at: 2026-09-13T20:08:30Z
-  body_sha256: 8ca49c4085bdf8079d976d5e24fd3cb200ac65a429e26e81e4ed1c384a7cdb02
+  at: 2026-11-01T18:56:31Z
 verified:
   - by: human:spencer
     at: 2026-09-13T20:11:54Z
+integrity:
+  generated:
+    body: 1145e565828a7155
 ---
 
 # Priority-ordered phase detection
@@ -37,7 +39,7 @@ the first match, read from the function body top to bottom:
 2. **validation (PR-triggered)** — `pull_request` event, PR open (not
    merged), head is the release branch, base is the target branch
    (`isReleasePROpen`).
-3. **Release-commit detection** — on a `push` event to the target branch,
+3. **Release-commit detection** — on a `push` or `workflow_dispatch` event to the target branch,
    queries the GitHub API for a merged release PR associated with the commit
    (see `api-authoritative-release-detection.md`).
 4. **publishing** — target branch and `isReleaseCommit`.
@@ -60,7 +62,7 @@ Is this a pull_request event?
   |           +-- Yes --> validation (PR-triggered)
   |           +-- No  --> none
   |
-  +-- No: Is this a push event?
+  +-- No: Is this a push or workflow_dispatch event?
         |
         +-- On target (main) branch?
         |     |

@@ -6,11 +6,13 @@ status: stable
 tags: [architecture, ci]
 generated:
   by: okfit/claude-code
-  at: 2026-09-13T20:08:30Z
-  body_sha256: c5f0d382126ebd402f061a8ddfaa5cf70d13aa526ea3d1ea3e4adadff68b87a1
+  at: 2026-11-01T18:56:31Z
 verified:
   - by: human:spencer
     at: 2026-09-13T20:11:55Z
+integrity:
+  generated:
+    body: 58615dafd8618819
 ---
 
 # Bounded retry on release-prefixed pushes
@@ -72,6 +74,14 @@ success, "not visible yet" is modelled as an internal tagged failure,
   predicate** in `narrow-degradation-predicate.md`. Putting it there would
   short-circuit the retry it exists to drive, since the degrade predicate
   converts a matching failure straight to "no match" without retrying.
+
+### Manual dispatch
+
+A `workflow_dispatch` on the target branch also runs the PR-association lookup
+(so a maintainer can recover when GitHub drops the push event for a release-PR
+merge), but a dispatch carries no `head_commit`: the commit message is empty,
+the `release-prefix` gate is false, and the lookup runs exactly once with no
+retry delay.
 
 ### Exhaustion
 
