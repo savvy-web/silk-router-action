@@ -91,9 +91,9 @@ Single `main.ts` entry — NO `pre.ts` / `post.ts`. The action runs one Effect p
 
 ## Technical Stack
 
-- **Effect v4** (`effect@4.1.1`, `catalog:effected`) for typed errors, dependency injection, and service composition. The single `effected` catalog (Effect family held to `~4.1.1`, plus every `@effected/*` package) is supplied by the `@effected/pnpm-plugin-effected` config dependency in `pnpm-workspace.yaml`, not by a `catalogs:` block in this repo. Never hand-edit those ranges; bump the plugin.
-- **`@effected/github-actions` 0.30.x** (`catalog:effected`) — the runner: `Action.run`, `ActionRuntime.layer`, `ActionInput.*`, `ActionOutputs`, `ActionLogger`, `GitHubMarkdown`. `ActionRuntime.layer` also provides the Effect 4.1 crypto services (`Digest`, `Mac`, `SecureRandom`) from `NodeCrypto`. Each service ships its own `makeTest`/`layerTest`; there is no separate testing subpath.
-- **`@effected/github` 0.27.x** (`catalog:effected`) — the GitHub API: `GitHubClient`, `PullRequest`, `Repo`, and one `GitHubError` carrying a `kind` discriminant.
+- **Effect v4** (`effect@4.1.2`, `catalog:effected`) for typed errors, dependency injection, and service composition. The single `effected` catalog (Effect family held to `~4.1.2`, plus every `@effected/*` package) is supplied by the `@effected/pnpm-plugin-effected` config dependency in `pnpm-workspace.yaml`, not by a `catalogs:` block in this repo. Never hand-edit those ranges; bump the plugin.
+- **`@effected/github-actions` 0.31.x** (`catalog:effected`) — the runner: `Action.run`, `ActionRuntime.layer`, `ActionInput.*`, `ActionOutputs`, `ActionLogger`, `GitHubMarkdown`. `ActionRuntime.layer` also provides the Effect 4.1 crypto services (`Digest`, `Mac`, `SecureRandom`) from `NodeCrypto`. Each service ships its own `makeTest`/`layerTest`; there is no separate testing subpath.
+- **`@effected/github` 0.28.x** (`catalog:effected`) — the GitHub API: `GitHubClient`, `PullRequest`, `Repo`, and one `GitHubError` carrying a `kind` discriminant.
 - **`@savvy-web/github-action-builder` ^2.4.24** (rsbuild-based) configured via `action.config.ts`.
 - **`@effect/platform-node`** at `catalog:effected` — a required peer of `@effected/github-actions`, composed by `ActionRuntime.layer` rather than wired by hand. `FileSystem` imports from `effect` core.
 - **`@savvy-web/silk` ^4.5.5** release toolchain (changesets v3 engine).
