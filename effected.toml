@@ -1,0 +1,9 @@
+[action.entries]
+main = "src/main.ts"
+
+[action.build]
+minify = true
+
+[action.persistLocal]
+enabled = false
+path = ".github/actions/local"

@@ -91,14 +91,14 @@ Single `main.ts` entry — NO `pre.ts` / `post.ts`. The action runs one Effect p
 
 ## Technical Stack
 
-- **Effect v4** (`effect@4.1.2`, `catalog:effected`) for typed errors, dependency injection, and service composition. The single `effected` catalog (Effect family held to `~4.1.2`, plus every `@effected/*` package) is supplied by the `@effected/pnpm-plugin-effected` config dependency in `pnpm-workspace.yaml`, not by a `catalogs:` block in this repo. Never hand-edit those ranges; bump the plugin.
-- **`@effected/github-actions` 0.32.x** (`catalog:effected`) — the runner: `Action.run`, `ActionRuntime.layer`, `ActionInput.*`, `ActionOutputs`, `ActionLogger`, `GitHubMarkdown`. `ActionRuntime.layer` also provides the Effect 4.1 crypto services (`Digest`, `Mac`, `SecureRandom`, `Signature`) from `NodeCrypto`. Each service ships its own `makeTest`/`layerTest`; there is no separate testing subpath.
-- **`@effected/github` 0.29.x** (`catalog:effected`) — the GitHub API: `GitHubClient`, `PullRequest`, `Repo`, and one `GitHubError` carrying a `kind` discriminant.
-- **`@savvy-web/github-action-builder` ^2.4.25** (rsbuild-based) configured via `action.config.ts`.
+- **Effect v4** (`effect@4.1.3`, `catalog:effected`) for typed errors, dependency injection, and service composition. The `effected` catalog (the Effect family at the exact version the plugin pins graph-wide, plus every `@effected/*` package) and its `effected:build` toolchain twin is supplied by the `@effected/pnpm-plugin-effected` config dependency in `pnpm-workspace.yaml`, not by a `catalogs:` block in this repo. Never hand-edit those ranges; bump the plugin.
+- **`@effected/github-actions` 0.33.x** (`catalog:effected`) — the runner: `Action.run`, `ActionRuntime.layer`, `ActionInput.*`, `ActionOutputs`, `ActionLogger`, `GitHubMarkdown`. `ActionRuntime.layer` also provides the Effect 4.1 crypto services (`Digest`, `Mac`, `SecureRandom`, `Signature`) from `NodeCrypto`. Each service ships its own `makeTest`/`layerTest`; there is no separate testing subpath.
+- **`@effected/github` 0.32.x** (`catalog:effected`) — the GitHub API: `GitHubClient`, `PullRequest`, `Repo`, and one `GitHubError` carrying a `kind` discriminant.
+- **`effected action build`** from `@effected/plugin` (`catalog:effected`), rolldown-based, configured by the `[action]` tables in `effected.toml`. It validates `action.yml` and import-checks the bundle as part of the build; there is no separate validate step. `tsconfig.json` extends `@effected/plugin/tsconfig/action.json`. `@savvy-web/github-action-builder` is deprecated and gone.
 - **`@effect/platform-node`** at `catalog:effected` — a required peer of `@effected/github-actions`, composed by `ActionRuntime.layer` rather than wired by hand. `FileSystem` imports from `effect` core.
-- **`@savvy-web/silk` ^4.5.6** release toolchain (changesets v3 engine).
-- **pnpm 12.17.0**, **Node 26.13.0** (`devEngines.runtime`); the action itself bundles to `runs.using: node24` (the latest supported by GitHub Actions runners today).
-- **Biome 2.6.4** with strict rules.
+- **`@savvy-web/silk` ^5.0.0** release toolchain (changesets v3 engine), with `@savvy-web/pnpm-plugin-silk` as the second config dependency. Silk takes its toolchain (`typescript`, `tsx`, `@types/node`) from the effected plugin's catalogs, not its own.
+- **pnpm 12.18.0**, **Node 26.13.0** (`devEngines.runtime`); the action itself bundles to `runs.using: node24` (the latest supported by GitHub Actions runners today).
+- **Biome 2.6.6** with strict rules.
 - **Vitest** with Effect test layers.
 - **Type checking:** `tsc --noEmit` from **TypeScript 7** (the native compiler; the `tsgo` preview binary graduated into `typescript@7`'s `tsc` and is no longer installed).
 - **Direct dependencies:** Zero `@actions/*` packages — all GitHub Actions integration comes from `@effected/github-actions` and `@effected/github`.
@@ -134,8 +134,8 @@ pnpm exec tsc --noEmit       # Direct
 pnpm lint:md                 # Check only
 pnpm lint:md:fix             # Apply fixes
 
-# Validate action.yml and dist
-pnpm validate
+# Build only the bundle (validates action.yml and import-checks dist/main.js)
+pnpm build:prod
 ```
 
 ## Dogfooding First-Party Dependencies
@@ -192,8 +192,8 @@ Biome enforces strict rules:
 │   └── workflows/             # CI workflows
 ├── .config/
 │   └── okfit.toml             # okfit bundle config
-├── action.config.ts
 ├── action.yml
+├── effected.toml          # [action] build config for effected action build
 └── package.json
 ```
 

@@ -1,10 +1,10 @@
 ---
 type: Decision
-status: stable
+status: deprecated
 title: Build with the rsbuild-based github-action-builder, not ncc
 description: >-
-  action.config.ts configures @savvy-web/github-action-builder to bundle
-  src/main.ts into the committed dist/main.js that action.yml's runs.using
+  Deprecated, superseded by action-build-tool. action.config.ts configured
+  @savvy-web/github-action-builder to bundle src/main.ts into the committed dist/main.js that action.yml's runs.using
   node24 entry point executes, in place of @vercel/ncc.
 tags:
   - bundle
@@ -12,11 +12,10 @@ tags:
   - ci
 generated:
   by: okfit/claude-code
-  at: 2026-09-13T20:08:30Z
-  body_sha256: 767cc142148fc9e407b524c84a9c78291e4813584facd9989e218ca7ee71ad31
+  at: 2026-11-10T18:01:33Z
 sources:
   - id: action-config
-    resource: ../../action.config.ts
+    resource: https://github.com/savvy-web/silk-router-action/blob/3522c30/action.config.ts
   - id: package-json
     resource: ../../package.json
   - id: action-yml
@@ -24,9 +23,17 @@ sources:
 verified:
   - by: human:spencer
     at: 2026-09-13T20:11:57Z
+integrity:
+  generated:
+    body: 9fdafad55236af0d
 ---
 
 # Build with the rsbuild-based github-action-builder, not ncc
+
+Deprecated: `@savvy-web/github-action-builder` is retired upstream, and the
+action now builds with `effected action build`. See the successor
+[action-build-tool](action-build-tool.md) decision; the record
+below is kept as history.
 
 ## Context
 
@@ -87,6 +94,6 @@ rather than a bundler this repository does not control the roadmap of.
   documented way to exercise the action from a local checkout without
   publishing.
 
-[^action-config]: `../../action.config.ts`
+[^action-config]: <https://github.com/savvy-web/silk-router-action/blob/3522c30/action.config.ts>
 [^package-json]: `../../package.json`
 [^action-yml]: `../../action.yml`
