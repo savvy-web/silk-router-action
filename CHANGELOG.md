@@ -1,5 +1,29 @@
 # @savvy-web/workflow-control-action
 
+## 1.3.43
+
+### Build System
+
+- The action bundle is now built with `effected action build` (rolldown, configured by `effected.toml`) instead of the deprecated `@savvy-web/github-action-builder` (rsbuild).
+- The rebuilt `dist/main.js` is smaller, 476 KB down to 406 KB. Inputs, outputs and `runs.main` are unchanged, and smoke runs of the old and new bundles produced identical outputs and job summaries for the `none`, `validation` and `branch-management` phases. [#467][#467]
+
+### Dependencies
+
+| Dependency | Type | Action | From | To |
+| --- | --- | --- | --- | --- |
+| @effect/platform-node | dependency | updated | ~4.1.2 | 4.1.3 |
+| @effected/github | dependency | updated | ^0.28.0 | ^0.32.0 |
+| @effected/github-actions | dependency | updated | ^0.31.0 | ^0.33.0 |
+| effect | dependency | updated | ~4.1.2 | 4.1.3 |
+
+[#467][#467]
+
+### Thanks
+
+Thanks to [@spencerbeggs](https://github.com/spencerbeggs) for their contributions!
+
+[#467]: https://github.com/savvy-web/silk-router-action/pull/467
+
 ## 1.3.42
 
 ### Dependencies
