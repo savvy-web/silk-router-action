@@ -1,6 +1,6 @@
 ---
 type: Decision
-status: draft
+status: stable
 title: Build with effected action build from @effected/plugin, configured by effected.toml
 description: >-
   effected.toml configures effected action build (rolldown, via
@@ -33,6 +33,13 @@ sources:
 integrity:
   generated:
     body: d056f82636304273
+  verified:
+    by: human:spencer
+    at: 2026-11-10T18:53:21Z
+    content: d148b47c31a5093a
+verified:
+  - by: human:spencer
+    at: 2026-11-10T18:53:21Z
 ---
 
 # Build with effected action build from @effected/plugin

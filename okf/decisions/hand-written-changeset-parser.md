@@ -18,9 +18,15 @@ sources:
 verified:
   - by: human:spencer
     at: 2026-09-13T20:11:57Z
+  - by: human:spencer
+    at: 2026-11-10T18:53:21Z
 integrity:
   generated:
     body: 6e6ca3bcaf16413b
+  verified:
+    by: human:spencer
+    at: 2026-11-10T18:53:21Z
+    content: 594a02c24f6b51d5
 ---
 
 # Parse changeset frontmatter with a hand-written regex parser
