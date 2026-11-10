@@ -1,5 +1,13 @@
 # Log
 
+## 2026-11-10
+
+* Added Build with effected action build from @effected/plugin, configured by effected.toml
+* Updated Build with the rsbuild-based github-action-builder, not ncc
+* Updated Parse changeset frontmatter with a hand-written regex parser
+* Updated dogfood-a-first-party-dependency
+* Updated silk-router-action
+
 ## 2026-11-01
 
 * Updated API-authoritative release detection

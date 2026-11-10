@@ -7,8 +7,7 @@ kind: action
 resource: ../../src
 generated:
   by: okfit/claude-code
-  at: 2026-09-13T20:08:30Z
-  body_sha256: 75fb0e5aaa26ff2315cb74cf4b6990e2ba3086f820aae3a5f76f9693bb4f47b5
+  at: 2026-11-10T18:01:33Z
 sources:
   - id: main-ts
     resource: ../../src/main.ts
@@ -30,8 +29,11 @@ sources:
     resource: ../../src/steps/parse-changesets.ts
   - id: write-summary-ts
     resource: ../../src/steps/write-summary.ts
-  - id: action-config-ts
-    resource: ../../action.config.ts
+  - id: effected-toml
+    resource: ../../effected.toml
+integrity:
+  generated:
+    body: 91f30309927754ec
 ---
 
 # silk-router-action module
@@ -188,15 +190,18 @@ be written twice by a copy-paste slip[^outputs-ts].
 
 ## Build system
 
-The build uses `@savvy-web/github-action-builder`, an rsbuild-based bundler
-configured in `action.config.ts`: a single `main` entry at `src/main.ts`,
-minified, with `xmlbuilder2`, `libxmljs2`, and `ajv-formats-draft2019`
-excluded[^action-config-ts]. It bundles `src/main.ts` into `dist/main.js`
-with every dependency inlined, so the action executes at runtime with no
-`node_modules` resolution — `dist/` is committed, and `runs.using: node24`
-in `action.yml` is the entry point GitHub Actions invokes. `persistLocal` is
-configured but disabled by default (`enabled: false`, targeting
-`.github/actions/local`)[^action-config-ts].
+The build runs `effected action build` from `@effected/plugin`, configured
+in `effected.toml`: a single `main` entry at `src/main.ts`,
+minified[^effected-toml]. The bundler underneath is rolldown, through
+`@effected/bundler`. It bundles `src/main.ts` into `dist/main.js` with every
+dependency inlined, so the action executes at runtime with no `node_modules`
+resolution — `dist/` is committed, and `runs.using: node24` in `action.yml`
+is the entry point GitHub Actions invokes. The same build validates
+`action.yml` and imports the finished bundle in a fresh Node process with no
+`GITHUB_*` environment; the `GITHUB_ACTIONS` guard in `src/main.ts` is what
+makes that import inert[^main-ts]. `persistLocal` is configured but disabled
+(`enabled = false`, targeting `.github/actions/local`)[^effected-toml]. See
+the [action-build-tool](../decisions/action-build-tool.md) decision for why.
 
 [^main-ts]: ../../src/main.ts
 [^program-ts]: ../../src/program.ts
@@ -208,5 +213,5 @@ configured but disabled by default (`enabled: false`, targeting
 [^detect-phase-ts]: ../../src/steps/detect-phase.ts
 [^parse-changesets-ts]: ../../src/steps/parse-changesets.ts
 [^write-summary-ts]: ../../src/steps/write-summary.ts
-[^action-config-ts]: ../../action.config.ts
+[^effected-toml]: ../../effected.toml
 </content>

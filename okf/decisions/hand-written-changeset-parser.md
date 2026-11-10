@@ -11,14 +11,16 @@ tags:
   - bundle
 generated:
   by: okfit/claude-code
-  at: 2026-09-13T20:08:30Z
-  body_sha256: b05f1164223751a1b12189133ea7001923d4665307cfa095f6c2ef5b749ce3cb
+  at: 2026-11-10T18:01:33Z
 sources:
   - id: parse-changesets
     resource: ../../src/steps/parse-changesets.ts
 verified:
   - by: human:spencer
     at: 2026-09-13T20:11:57Z
+integrity:
+  generated:
+    body: 6e6ca3bcaf16413b
 ---
 
 # Parse changeset frontmatter with a hand-written regex parser
@@ -64,8 +66,8 @@ two-regex parser covers it completely for the shapes `.changeset/*.md` files
 actually take in this repository. Depending on `@changesets/*` for this would
 add a dependency surface for a format specific enough that the bundler would
 inline every one of those packages' internals into `dist/main.js` regardless
-(see the rsbuild-action-builder decision) — full YAML parsing, config
-resolution, and workspace-graph logic this action never calls.
+(see the [action-build-tool](action-build-tool.md) decision) — full YAML
+parsing, config resolution, and workspace-graph logic this action never calls.
 
 ## Alternatives rejected
 
@@ -73,7 +75,7 @@ resolution, and workspace-graph logic this action never calls.
   overhead is real and the coverage overlap is total for this action's use:
   every field these packages parse beyond `{ name, type }` and the summary
   body goes unused here, and the dependency edge would still get bundled
-  in whole through rsbuild rather than tree-shaken away, since `@changesets/*`
+  in whole by the bundler rather than tree-shaken away, since `@changesets/*`
   packages are written for a Node runtime, not for static analysis.
 - **A full YAML parser** (e.g. `js-yaml`) for just the frontmatter block.
   Rejected for the same reason: the frontmatter's grammar is one line format
