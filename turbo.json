@@ -13,6 +13,7 @@
 				"$TURBO_ROOT$/pnpm-lock.yaml",
 				"$TURBO_ROOT$/pnpm-workspace.yaml",
 				"action.yml",
+				"effected.toml",
 				"package.json",
 				"tsconfig.json",
 				"src/**/*.ts",
