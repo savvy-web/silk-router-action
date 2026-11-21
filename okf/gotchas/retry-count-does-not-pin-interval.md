@@ -9,7 +9,9 @@ tags: [testing]
 generated:
   by: okfit/claude-code
   at: 2026-09-13T20:08:30Z
-  body_sha256: 99f95daecd0ae205e2cb8d40413fa10b5412c37e64d882c7dcb2c23f44f22366
+integrity:
+  generated:
+    body: 99f95daecd0ae205
 ---
 
 # A retry call-count assertion does not pin the retry interval

@@ -9,10 +9,12 @@ tags:
 generated:
   by: okfit/claude-code
   at: 2026-09-13T20:08:30Z
-  body_sha256: 6fcaf14a3f507f15f3e0254269e18f5f9de6464d03c404da62d14e41767e64e9
 sources:
   - id: detect-phase-ts
     resource: ../../src/steps/detect-phase.ts
+integrity:
+  generated:
+    body: 6fcaf14a3f507f15
 ---
 
 # An API-failure fallback cannot name the merged PR

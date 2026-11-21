@@ -8,7 +8,9 @@ tags: [testing]
 generated:
   by: okfit/claude-code
   at: 2026-09-13T20:08:30Z
-  body_sha256: f7c484021eacfbd8fb3191fb1005f3014d28b4099129b53f7aef1553afefca18
+integrity:
+  generated:
+    body: f7c484021eacfbd8
 ---
 
 # Break the guarded thing before calling a suite done

@@ -6,7 +6,6 @@ status: draft
 generated:
   by: okfit/claude-code
   at: 2026-09-13T20:08:30Z
-  body_sha256: 1fe97e06cc692bc9643530add1a97077950a9418f98bfcedca243c405fddd43b
 sources:
   - id: root-claude-md
     resource: ../CLAUDE.md
@@ -14,6 +13,9 @@ sources:
     resource: ../action.yml
   - id: package-json
     resource: ../package.json
+integrity:
+  generated:
+    body: 1fe97e06cc692bc9
 ---
 
 # silk-router-action

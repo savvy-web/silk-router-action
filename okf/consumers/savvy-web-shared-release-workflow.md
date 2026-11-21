@@ -8,7 +8,6 @@ tags: [release, ci]
 generated:
   by: okfit/claude-code
   at: 2026-09-13T20:08:30Z
-  body_sha256: d24baa5175183262cf3c1140ad434e40d1e13bd1f1363c378cb7a9645ef49e1c
 sources:
   - id: local-release-yml
     resource: ../../.github/workflows/release.yml
@@ -16,6 +15,9 @@ sources:
     resource: ../../action.yml
   - id: root-claude-md
     resource: ../../CLAUDE.md
+integrity:
+  generated:
+    body: d24baa5175183262
 ---
 
 # savvy-web-shared-release-workflow

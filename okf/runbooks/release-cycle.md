@@ -8,7 +8,6 @@ tags: [release, ci]
 generated:
   by: okfit/claude-code
   at: 2026-09-13T20:08:30Z
-  body_sha256: 65d27c9f023e2826cb55f8b050e19e90d258e29a14f80147b910e81e42050539
 sources:
   - id: branch-sync-yml
     resource: ../../.github/workflows/branch-sync.yml
@@ -16,6 +15,9 @@ sources:
     resource: ../../.github/workflows/release.yml
   - id: root-claude-md
     resource: ../../CLAUDE.md
+integrity:
+  generated:
+    body: 65d27c9f023e2826
 ---
 
 # Release cycle

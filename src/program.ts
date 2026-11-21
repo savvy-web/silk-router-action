@@ -11,27 +11,24 @@ import { parseChangesets } from "./steps/parse-changesets.js";
 import { writeSummary } from "./steps/write-summary.js";
 
 /**
- * Run one step in the log shape the legacy toolkit's `groupStep` produced.
+ * Run one unit of work as an `ActionLogger.step`.
  *
  * @remarks
- * A collapsible block **and** discard-on-success buffering, with one info line
- * on success — the shape the legacy `groupStep` produced, which was
- * `ActionLogger.group` + `withStep`.
+ * A step holds its detail, folds it into one `::group::` titled by its result
+ * line on success, and writes it unfolded on failure — the shape the legacy
+ * toolkit's `groupStep` produced (a collapsible block plus one success line).
+ * It opens its own group, so it must not be wrapped in `ActionLogger.group`:
+ * a step opened inside a group cannot fold.
  *
- * `withStep` landed in `@effected/github-actions@0.5.0`, so this is now the
- * legacy composition verbatim rather than an approximation of it. The port
- * initially shipped `group` + `withBuffer`, which reproduced the block and the
- * buffering but dropped the per-step success line.
- *
- * Neither `withBuffer` nor `withStep` buffers warnings or errors, so a long step
- * still reports trouble while it is running.
+ * Warnings and errors are never held, so a long step still reports trouble
+ * while it is running.
  *
  * @internal
  */
 const step = <A, E, R>(name: string, effect: Effect.Effect<A, E, R>): Effect.Effect<A, E, R | ActionLogger> =>
 	Effect.gen(function* () {
 		const logger = yield* ActionLogger;
-		return yield* logger.group(name, logger.withStep(name, effect));
+		return yield* logger.step(name, effect);
 	});
 
 /**
@@ -49,13 +46,22 @@ export const program: Effect.Effect<
 	ActionOutputError | ChangesetParseError | Config.ConfigError,
 	ActionLogger | ActionOutputs | FileSystem.FileSystem | DetectPhaseRequirements
 > = Effect.gen(function* () {
+	const logger = yield* ActionLogger;
 	const inputs = yield* readInputs;
 
-	const phase = yield* step("Detect workflow phase", detectPhase({ inputs }));
-	const changesets = yield* step("Parse changesets", parseChangesets());
+	// One bold heading over the four steps, so a reader scanning a long job log
+	// finds this action's block. A phase is never folded and writes nothing when
+	// it ends; the steps inside it still fold as top-level steps.
+	yield* logger.phase(
+		"Workflow Control",
+		Effect.gen(function* () {
+			const phase = yield* step("Detect workflow phase", detectPhase({ inputs }));
+			const changesets = yield* step("Parse changesets", parseChangesets());
 
-	yield* step("Emit outputs", emitOutputs(foldOutputs({ phase, changesets })));
-	yield* step("Write job summary", writeSummary({ phase, changesets, inputs }));
+			yield* step("Emit outputs", emitOutputs(foldOutputs({ phase, changesets })));
+			yield* step("Write job summary", writeSummary({ phase, changesets, inputs }));
+		}),
+	);
 }).pipe(
 	// Publish the all-disabled contract on any failure path.
 	//

@@ -7,10 +7,12 @@ tags: [architecture, deps, testing]
 generated:
   by: okfit/claude-code
   at: 2026-09-13T20:08:30Z
-  body_sha256: b645b06696dd39a94faa4a34acc77b14c39333e30a9220f4e26aa0baac4eff0a
 verified:
   - by: human:spencer
     at: 2026-09-13T20:11:53Z
+integrity:
+  generated:
+    body: b645b06696dd39a9
 ---
 
 # Kit services over @actions/* packages

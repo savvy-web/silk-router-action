@@ -5,12 +5,14 @@ description: The repository's precise sense of "release commit" versus a release
 generated:
   by: okfit/claude-code
   at: 2026-09-13T20:08:30Z
-  body_sha256: 0f77972225ab69eabbc805edc756392472fdcffa66708858494488ea6c369d8f
 sources:
   - id: detect-phase-ts
     resource: ../../src/steps/detect-phase.ts
   - id: action-yml
     resource: ../../action.yml
+integrity:
+  generated:
+    body: 0f77972225ab69ea
 ---
 
 # Release commit

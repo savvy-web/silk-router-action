@@ -8,7 +8,9 @@ tags: [testing]
 generated:
   by: okfit/claude-code
   at: 2026-09-13T20:08:30Z
-  body_sha256: 1b7b9a147df7abec4521168c377be4c8d8aa0f3787e8cd70ce89797aa5bbe0b6
+integrity:
+  generated:
+    body: 1b7b9a147df7abec
 ---
 
 # Collect tests only from unit and integration, never restore stripped env vars
