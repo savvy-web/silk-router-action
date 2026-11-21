@@ -8,7 +8,9 @@ tags: [testing, dx]
 generated:
   by: okfit/claude-code
   at: 2026-09-13T20:08:30Z
-  body_sha256: d21db9cabc8fd9c95bf76b3341061abe1baa795458510c09cb18898f119edbed
+integrity:
+  generated:
+    body: d21db9cabc8fd9c9
 ---
 
 # Inject test inputs by provider, never by mutating process.env

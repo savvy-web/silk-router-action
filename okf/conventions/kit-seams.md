@@ -8,7 +8,9 @@ tags: [architecture, dx]
 generated:
   by: okfit/claude-code
   at: 2026-09-13T20:08:30Z
-  body_sha256: ce8d5549f5f4c511ad61877c46dd6cdf9215bffb17e46199ddbab64a5ea89dd4
+integrity:
+  generated:
+    body: ce8d5549f5f4c511
 ---
 
 # Read inputs through ActionInput, resolve Repo per call, emit through one emitter

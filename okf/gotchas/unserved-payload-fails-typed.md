@@ -9,12 +9,14 @@ tags:
 generated:
   by: okfit/claude-code
   at: 2026-09-13T20:08:30Z
-  body_sha256: 0c453a3ebef4f735d9033745987e55a323215997ab28543d5482be23b5779d5a
 sources:
   - id: doubles-ts
     resource: ../../__test__/utils/doubles.ts
   - id: doubles-test-ts
     resource: ../../__test__/unit/doubles.test.ts
+integrity:
+  generated:
+    body: 0c453a3ebef4f735
 ---
 
 # Omitting a test payload fails typed, not silently

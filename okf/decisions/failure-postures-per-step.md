@@ -14,7 +14,6 @@ tags:
 generated:
   by: okfit/claude-code
   at: 2026-09-13T20:08:30Z
-  body_sha256: a95ecee9bc2b9935ac522a42b1dd5f71d4f06293aeef085c4b1711ba8be33772
 sources:
   - id: detect-phase
     resource: ../../src/steps/detect-phase.ts
@@ -27,6 +26,9 @@ sources:
 verified:
   - by: human:spencer
     at: 2026-09-13T20:11:55Z
+integrity:
+  generated:
+    body: a95ecee9bc2b9935
 ---
 
 # Each step declares its failure posture at contract time

@@ -9,7 +9,9 @@ tags: [dx, testing]
 generated:
   by: okfit/claude-code
   at: 2026-09-13T20:08:30Z
-  body_sha256: 43d3a4e8b19af1605c916eb8246aa079ea6274acb785a48cfe3a42d468f55a15
+integrity:
+  generated:
+    body: 43d3a4e8b19af160
 ---
 
 # A hyphenated input name keeps its hyphen in the runner variable

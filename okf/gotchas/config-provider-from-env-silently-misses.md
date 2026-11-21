@@ -9,7 +9,9 @@ tags: [testing, dx]
 generated:
   by: okfit/claude-code
   at: 2026-09-13T20:08:30Z
-  body_sha256: e01e06d49cfb2cb6899b3da6967e17b6b1c3be582fdc27434a22b52b31c3d1d9
+integrity:
+  generated:
+    body: e01e06d49cfb2cb6
 ---
 
 # ConfigProvider.fromEnv silently misses every hyphenated input name

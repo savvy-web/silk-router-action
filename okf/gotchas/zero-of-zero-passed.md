@@ -10,10 +10,12 @@ tags:
 generated:
   by: okfit/claude-code
   at: 2026-09-13T20:08:30Z
-  body_sha256: 359f018713cea822ba8b391385a1e6820779dc5bece44121f4b42f5e6934ddb9
 sources:
   - id: vitest-config-ts
     resource: ../../vitest.config.ts
+integrity:
+  generated:
+    body: 359f018713cea822
 ---
 
 # "Tests: 0/0 passed" reads as green but proves nothing

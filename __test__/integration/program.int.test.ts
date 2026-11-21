@@ -146,14 +146,13 @@ describe("program (failure path)", () => {
 	 * `if: … should_continue == 'true'` reading an empty string rather than an
 	 * explicit `"false"`.
 	 *
-	 * Fault-injected through `ActionLogger.group`, which every step passes
+	 * Fault-injected through `ActionLogger.step`, which every step passes
 	 * through — the steps' own failure modes are covered in their unit suites.
 	 */
 	const runFailing = async () => {
 		const { recorder, layer: outputs } = actionOutputsRecording();
 		const exploding = ActionLogger.layerTest({
-			group: () => Effect.die("injected step failure"),
-			withBuffer: (_label, effect) => effect,
+			step: () => Effect.die("injected step failure"),
 		});
 		const layer = Layer.mergeAll(
 			outputs,
@@ -175,37 +174,21 @@ describe("program (failure path)", () => {
 	});
 
 	/**
-	 * The discriminating test for the per-step summary line.
+	 * The discriminating test for the step log.
 	 *
 	 * @remarks
-	 * The port originally shipped `group` + `withBuffer`, which reproduced the
-	 * collapsible block and the buffering but dropped the one info line the legacy
-	 * `groupStep` emitted on success. `withStep` landed in
-	 * `@effected/github-actions@0.5.0` and closes that gap.
-	 *
-	 * Nothing observable distinguishes the two through the test double — every
-	 * wrapper is a pass-through, so a suite asserting only outputs stays green
-	 * either way. Asserting which member each step routes through is what makes
-	 * the regression detectable: swap `withStep` back to `withBuffer` in
-	 * `program.ts` and this fails while everything else still passes.
+	 * Every wrapper in the silent double is a pass-through, so a suite asserting
+	 * only outputs stays green whether `program.ts` runs a step through
+	 * `ActionLogger.step` or not at all. `ActionLogger.recording()` captures the
+	 * step log's structure: drop the phase or a step's wrapper, rename either, or
+	 * nest one step in another and this fails while everything else still passes.
 	 */
-	it("routes every step through withStep, not withBuffer", async () => {
-		const stepped: Array<string> = [];
-		const buffered: Array<string> = [];
+	it("runs every unit of work as a top-level step under one phase", async () => {
 		const { layer: outputs } = actionOutputsRecording();
-		const recordingLogger = ActionLogger.layerTest({
-			withStep: (name, effect) => {
-				stepped.push(name);
-				return effect;
-			},
-			withBuffer: (label, effect) => {
-				buffered.push(label);
-				return effect;
-			},
-		});
+		const logger = ActionLogger.recording();
 		const layer = Layer.mergeAll(
 			outputs,
-			recordingLogger,
+			logger.layer,
 			actionEnvironmentTest(
 				{ GITHUB_REF: "refs/heads/main", GITHUB_EVENT_NAME: "push", GITHUB_SHA: "abc" },
 				{ head_commit: { message: "feat: a thing" } },
@@ -218,8 +201,17 @@ describe("program (failure path)", () => {
 			program.pipe(Effect.provide(layer), Effect.provide(ConfigProvider.layer(ActionInput.provider({})))),
 		);
 
-		expect(stepped).toEqual(["Detect workflow phase", "Parse changesets", "Emit outputs", "Write job summary"]);
-		expect(buffered).toEqual([]);
+		const entries = logger.entries();
+		expect(entries.map((entry) => (entry.kind === "step" ? entry.name : `phase:${entry.title}`))).toEqual([
+			"phase:Workflow Control",
+			"Detect workflow phase",
+			"Parse changesets",
+			"Emit outputs",
+			"Write job summary",
+		]);
+		for (const entry of entries) {
+			if (entry.kind === "step") expect(entry.steps).toEqual([]);
+		}
 	});
 
 	/**
@@ -235,9 +227,7 @@ describe("program (failure path)", () => {
 	 */
 	it("keeps the original cause when the failure-path write also fails", async () => {
 		const exploding = ActionLogger.layerTest({
-			group: () => Effect.die("injected step failure"),
-			withStep: (_name, effect) => effect,
-			withBuffer: (_label, effect) => effect,
+			step: () => Effect.die("injected step failure"),
 		});
 		const brokenOutputs = ActionOutputs.layerTest({
 			set: () => Effect.fail(new Error("output write failed") as never),

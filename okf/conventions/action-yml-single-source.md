@@ -8,7 +8,9 @@ tags: [dx, testing]
 generated:
   by: okfit/claude-code
   at: 2026-09-13T20:08:30Z
-  body_sha256: 3a131702316e6fdb0543f17a03ea28718469778df6c8553b23da899aac11bd39
+integrity:
+  generated:
+    body: 3a131702316e6fdb
 ---
 
 # action.yml is the single source of input and output names

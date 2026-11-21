@@ -10,10 +10,12 @@ tags:
 generated:
   by: okfit/claude-code
   at: 2026-09-13T20:08:30Z
-  body_sha256: e15b27c57d03127995bf99e6e99a8f8488d3c371d97afc2b650db9f23581ec72
 sources:
   - id: inputs-ts
     resource: ../../src/schema/inputs.ts
+integrity:
+  generated:
+    body: e15b27c57d031279
 ---
 
 # An explicit empty release-prefix is unverified on a real runner

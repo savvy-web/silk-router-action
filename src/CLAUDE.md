@@ -63,9 +63,9 @@ for each step's posture.
 ## Logging
 
 See [`step-module-shape`](../okf/conventions/step-module-shape.md) for the
-`group` + `withStep` wrapping and why it replaced `withBuffer`, and
+`ActionLogger.step` wrapping every step uses, and
 [`withstep-invisible-through-double`](../okf/gotchas/withstep-invisible-through-double.md)
-for why the test double can't tell the two apart.
+for why the silent test double can't see the step log.
 
 ## Code style
 
