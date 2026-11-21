@@ -1,5 +1,20 @@
 # @savvy-web/workflow-control-action
 
+## 1.3.46
+
+### Refactoring
+
+- The run log now opens with a bold **Workflow Control** heading, and each pipeline step runs through `ActionLogger.step`, which replaced `group` + `withStep` when `@effected/github-actions` 0.36.0 removed them. The run log shows one result line per step, such as `✓ Detect workflow phase · 1.2s`, with the step's detail folded beneath it on success and written unfolded on failure. Inputs, outputs and phase detection are unchanged.
+
+### Dependencies
+
+| Dependency | Type | Action | From | To |
+| --- | --- | --- | --- | --- |
+| @effect/platform-node | dependency | updated | 4.1.4 | 4.1.5 |
+| @effected/github | dependency | updated | ^0.32.1 | ^0.34.0 |
+| @effected/github-actions | dependency | updated | ^0.34.0 | ^0.36.1 |
+| effect | dependency | updated | 4.1.4 | 4.1.5 |
+
 ## 1.3.45
 
 ### Dependencies
