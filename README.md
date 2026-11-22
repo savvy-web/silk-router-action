@@ -154,7 +154,7 @@ jobs:
 
       - name: Setup runtime
         id: runtime
-        uses: savvy-web/silk-runtime-action@v1
+        uses: savvy-web/silk-runtime-action@v2
 
       - name: Run release
         uses: savvy-web/silk-release-action@v5
@@ -199,7 +199,7 @@ jobs:
           echo "Changeset count: ${{ steps.control.outputs.changeset_count }}"
 
       - name: Setup runtime
-        uses: savvy-web/silk-runtime-action@v1
+        uses: savvy-web/silk-runtime-action@v2
 
       - name: Run validation
         run: |
@@ -259,7 +259,7 @@ jobs:
 
       - name: Setup runtime
         id: runtime
-        uses: savvy-web/silk-runtime-action@v1
+        uses: savvy-web/silk-runtime-action@v2
 
       - name: Run release
         uses: savvy-web/silk-release-action@v5
@@ -347,7 +347,7 @@ jobs:
 
       - name: Setup runtime
         id: runtime
-        uses: savvy-web/silk-runtime-action@v1
+        uses: savvy-web/silk-runtime-action@v2
 
       - name: Run release
         uses: savvy-web/silk-release-action@v5
