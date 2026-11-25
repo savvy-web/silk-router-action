@@ -9,7 +9,7 @@ tags: [testing, dx]
 generated:
   by: okfit/claude-code
   at: 2026-09-13T20:08:30Z
-integrity:
+x-okfit-integrity:
   generated:
     body: e01e06d49cfb2cb6
 ---

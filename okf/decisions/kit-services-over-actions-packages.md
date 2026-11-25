@@ -10,9 +10,15 @@ generated:
 verified:
   - by: human:spencer
     at: 2026-09-13T20:11:53Z
-integrity:
+  - by: human:spencer
+    at: 2026-11-25T23:10:14Z
+x-okfit-integrity:
   generated:
     body: b645b06696dd39a9
+  verified:
+    by: human:spencer
+    at: 2026-11-25T23:10:14Z
+    content: 4cb161dedb865b93
 ---
 
 # Kit services over @actions/* packages

@@ -10,9 +10,15 @@ generated:
 verified:
   - by: human:spencer
     at: 2026-09-13T20:11:55Z
-integrity:
+  - by: human:spencer
+    at: 2026-11-25T23:10:14Z
+x-okfit-integrity:
   generated:
     body: 58615dafd8618819
+  verified:
+    by: human:spencer
+    at: 2026-11-25T23:10:14Z
+    content: f72dc605ead13edb
 ---
 
 # Bounded retry on release-prefixed pushes

@@ -26,9 +26,15 @@ sources:
 verified:
   - by: human:spencer
     at: 2026-09-13T20:11:55Z
-integrity:
+  - by: human:spencer
+    at: 2026-11-25T23:10:14Z
+x-okfit-integrity:
   generated:
     body: a95ecee9bc2b9935
+  verified:
+    by: human:spencer
+    at: 2026-11-25T23:10:14Z
+    content: c4f7a0458d4309b2
 ---
 
 # Each step declares its failure posture at contract time

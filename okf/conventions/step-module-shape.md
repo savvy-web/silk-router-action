@@ -8,7 +8,7 @@ tags: [architecture, dx, observability]
 generated:
   by: okfit/claude-code
   at: 2026-11-21T22:15:16Z
-integrity:
+x-okfit-integrity:
   generated:
     body: 86a087f265b0630f
 ---

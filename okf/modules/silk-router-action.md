@@ -3,7 +3,7 @@ type: Module
 title: silk-router-action
 description: The one GitHub Action module — entry point, pipeline, layer wiring, and build.
 status: draft
-kind: action
+x-okfit-kind: action
 resource: ../../src
 generated:
   by: okfit/claude-code
@@ -31,7 +31,7 @@ sources:
     resource: ../../src/steps/write-summary.ts
   - id: effected-toml
     resource: ../../effected.toml
-integrity:
+x-okfit-integrity:
   generated:
     body: 91f30309927754ec
 ---

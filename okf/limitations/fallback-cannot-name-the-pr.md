@@ -2,7 +2,7 @@
 type: Limitation
 title: An API-failure fallback cannot name the merged PR
 description: When the PR-association query degrades, is_release_commit falls back to commit-message patterns and merged_pr_number is left empty
-bounds: ../interfaces/action-contract.md
+x-okfit-bounds: ../interfaces/action-contract.md
 stale_after: 2026-12-12T00:00:00Z
 tags:
   - ci
@@ -12,7 +12,7 @@ generated:
 sources:
   - id: detect-phase-ts
     resource: ../../src/steps/detect-phase.ts
-integrity:
+x-okfit-integrity:
   generated:
     body: 6fcaf14a3f507f15
 ---

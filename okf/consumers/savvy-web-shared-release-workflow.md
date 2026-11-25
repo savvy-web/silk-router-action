@@ -3,7 +3,7 @@ type: Consumer
 title: savvy-web-shared-release-workflow
 description: The shared reusable release workflow at savvy-web/.github, which this repository's own CI pins and which is the intended caller of this action's phase-detection outputs.
 status: draft
-repository: savvy-web/.github
+x-okfit-repository: savvy-web/.github
 tags: [release, ci]
 generated:
   by: okfit/claude-code
@@ -15,7 +15,7 @@ sources:
     resource: ../../action.yml
   - id: root-claude-md
     resource: ../../CLAUDE.md
-integrity:
+x-okfit-integrity:
   generated:
     body: d24baa5175183262
 ---

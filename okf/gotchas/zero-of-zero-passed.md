@@ -13,7 +13,7 @@ generated:
 sources:
   - id: vitest-config-ts
     resource: ../../vitest.config.ts
-integrity:
+x-okfit-integrity:
   generated:
     body: 359f018713cea822
 ---

@@ -3,7 +3,7 @@ type: Interface
 title: action-contract
 description: The action's inputs, outputs, and phase values, from the consumer's side.
 status: draft
-kind: runtime
+x-okfit-kind: runtime
 resource: ../../action.yml
 generated:
   by: okfit/claude-code
@@ -17,7 +17,7 @@ sources:
     resource: ../../src/program.ts
   - id: outputs-ts
     resource: ../../src/schema/outputs.ts
-integrity:
+x-okfit-integrity:
   generated:
     body: 64598a9b8cb45a57
 ---

@@ -7,7 +7,7 @@ description: >-
   @effected/bundler) to bundle src/main.ts into the committed dist/main.js,
   validate action.yml and import-check the bundle, replacing the deprecated
   rsbuild-based @savvy-web/github-action-builder.
-supersedes: rsbuild-action-builder.md
+x-okfit-supersedes: rsbuild-action-builder.md
 tags:
   - bundle
   - deps
@@ -30,16 +30,18 @@ sources:
     resource: conversation with the repository owner
     author: human:spencer
     last_modified: 2026-11-10T00:00:00Z
-integrity:
+x-okfit-integrity:
   generated:
     body: d056f82636304273
   verified:
     by: human:spencer
-    at: 2026-11-10T18:53:21Z
-    content: d148b47c31a5093a
+    at: 2026-11-25T23:10:14Z
+    content: f46452f2733e6167
 verified:
   - by: human:spencer
     at: 2026-11-10T18:53:21Z
+  - by: human:spencer
+    at: 2026-11-25T23:10:14Z
 ---
 
 # Build with effected action build from @effected/plugin
