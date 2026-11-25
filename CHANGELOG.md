@@ -1,5 +1,14 @@
 # @savvy-web/workflow-control-action
 
+## 1.3.47
+
+### Dependencies
+
+| Dependency | Type | Action | From | To |
+| --- | --- | --- | --- | --- |
+| @effected/github | dependency | updated | ^0.34.0 | ^0.34.1 |
+| @effected/github-actions | dependency | updated | ^0.36.1 | ^0.38.1 |
+
 ## 1.3.46
 
 ### Refactoring
