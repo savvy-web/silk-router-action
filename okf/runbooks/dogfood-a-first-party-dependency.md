@@ -15,7 +15,7 @@ sources:
     resource: ../../pnpm-workspace.yaml
   - id: root-claude-md
     resource: ../../CLAUDE.md
-integrity:
+x-okfit-integrity:
   generated:
     body: 48e78d82bf3114a0
 ---

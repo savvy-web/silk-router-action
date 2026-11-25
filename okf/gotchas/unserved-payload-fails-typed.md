@@ -14,7 +14,7 @@ sources:
     resource: ../../__test__/utils/doubles.ts
   - id: doubles-test-ts
     resource: ../../__test__/unit/doubles.test.ts
-integrity:
+x-okfit-integrity:
   generated:
     body: 0c453a3ebef4f735
 ---

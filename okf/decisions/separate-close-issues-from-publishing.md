@@ -21,9 +21,15 @@ sources:
 verified:
   - by: human:spencer
     at: 2026-09-13T20:11:56Z
-integrity:
+  - by: human:spencer
+    at: 2026-11-25T23:10:14Z
+x-okfit-integrity:
   generated:
     body: 975c896060038fa1
+  verified:
+    by: human:spencer
+    at: 2026-11-25T23:10:14Z
+    content: ff0cce1e650a0682
 ---
 
 # Close-issues is a separate phase from publishing

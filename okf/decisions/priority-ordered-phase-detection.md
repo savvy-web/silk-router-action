@@ -10,9 +10,15 @@ generated:
 verified:
   - by: human:spencer
     at: 2026-09-13T20:11:54Z
-integrity:
+  - by: human:spencer
+    at: 2026-11-25T23:10:14Z
+x-okfit-integrity:
   generated:
     body: 1145e565828a7155
+  verified:
+    by: human:spencer
+    at: 2026-11-25T23:10:14Z
+    content: 471f0c9aaa1cfb86
 ---
 
 # Priority-ordered phase detection

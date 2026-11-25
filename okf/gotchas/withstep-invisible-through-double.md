@@ -9,7 +9,7 @@ tags: [testing, observability]
 generated:
   by: okfit/claude-code
   at: 2026-11-21T22:15:16Z
-integrity:
+x-okfit-integrity:
   generated:
     body: e0cd3fe758873ece
 ---

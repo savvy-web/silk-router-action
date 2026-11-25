@@ -2,7 +2,7 @@
 type: Limitation
 title: An explicit empty release-prefix is unverified on a real runner
 description: Whether GitHub publishes an empty INPUT_RELEASE-PREFIX for an explicitly-empty with value, versus substituting the action.yml default, has never been confirmed outside a local test
-bounds: ../interfaces/action-contract.md
+x-okfit-bounds: ../interfaces/action-contract.md
 stale_after: 2026-12-12T00:00:00Z
 tags:
   - ci
@@ -13,7 +13,7 @@ generated:
 sources:
   - id: inputs-ts
     resource: ../../src/schema/inputs.ts
-integrity:
+x-okfit-integrity:
   generated:
     body: e15b27c57d031279
 ---

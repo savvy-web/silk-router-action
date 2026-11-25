@@ -10,9 +10,15 @@ generated:
 verified:
   - by: human:spencer
     at: 2026-09-13T20:11:54Z
-integrity:
+  - by: human:spencer
+    at: 2026-11-25T23:10:14Z
+x-okfit-integrity:
   generated:
     body: 7a806831a5c3ae35
+  verified:
+    by: human:spencer
+    at: 2026-11-25T23:10:14Z
+    content: 10cd82946c45e2ab
 ---
 
 # API-authoritative release detection

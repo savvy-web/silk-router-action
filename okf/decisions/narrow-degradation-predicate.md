@@ -18,9 +18,15 @@ sources:
 verified:
   - by: human:spencer
     at: 2026-09-13T20:11:56Z
-integrity:
+  - by: human:spencer
+    at: 2026-11-25T23:10:14Z
+x-okfit-integrity:
   generated:
     body: 0165e23cec95b6ba
+  verified:
+    by: human:spencer
+    at: 2026-11-25T23:10:14Z
+    content: 15591d228ae70711
 ---
 
 # Only five of seven GitHubError kinds degrade the release-commit query

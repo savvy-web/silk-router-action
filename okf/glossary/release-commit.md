@@ -10,7 +10,7 @@ sources:
     resource: ../../src/steps/detect-phase.ts
   - id: action-yml
     resource: ../../action.yml
-integrity:
+x-okfit-integrity:
   generated:
     body: 0f77972225ab69ea
 ---

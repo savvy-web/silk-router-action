@@ -15,7 +15,7 @@ sources:
     resource: ../../.github/workflows/release.yml
   - id: root-claude-md
     resource: ../../CLAUDE.md
-integrity:
+x-okfit-integrity:
   generated:
     body: 65d27c9f023e2826
 ---
